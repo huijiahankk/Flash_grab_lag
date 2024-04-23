@@ -60,7 +60,6 @@ yCenter = windowRect(4) / 2; % Center Y-coordinate
 gratingRadius = min(xCenter, yCenter) - 50; % Radius of the grating
 numCycles = 18; % Number of cycles
 cycleWidth = gratingRadius / numCycles; % Width of each cycle
-gratingRect = [xCenter - gratingRadius, yCenter - gratingRadius, xCenter + gratingRadius, yCenter + gratingRadius];
 
 % Define variables for the animation speed and the phase of the grating
 phaseShift = 0; % Initial phase shift (frame)
@@ -73,7 +72,7 @@ R = sqrt(X.^2 + Y.^2);
 grating = zeros(size(R));
 
 %----------------------------------------------------------------------
-%  define the size of the center grey disk and wedge
+%         define the size of the center grey disk
 %---------------------------------------------------------------------- 
 centerDiskRadiusDva = 3;
 centerDiskRadiusPix = dva2pix(centerDiskRadiusDva,eyeScreenDistence,windowRect,screenHeight); % Diameter of the grey disk in pixels, adjust as needed
@@ -81,14 +80,14 @@ centerDiskRect = [xCenter - centerDiskRadiusPix, yCenter - centerDiskRadiusPix, 
 
 % Define wedge angles
 wedgeAngle = 45;
-wedgeAnglesStart = -22.5;
+wedgeAnglesStart = -25;
 wedgeAnglesMat = [wedgeAnglesStart, wedgeAnglesStart + 90, wedgeAnglesStart + 180, wedgeAnglesStart + 270];
-
+gratingRect = [xCenter - gratingRadius, yCenter - gratingRadius, xCenter + gratingRadius, yCenter + gratingRadius];
 
 %----------------------------------------------------------------------
 %        flashed red bar parameters
 %---------------------------------------------------------------------- 
-flash.WidthDva = 0.5; % Width of the red flashed bar in visual degree angle
+flash.WidthDva = 0.2; % Width of the red flashed bar in visual degree angle
 flash.LengthDva = 3; % Height of the red flashed bar in visual degree angle
 flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeight);
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
@@ -97,7 +96,7 @@ flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rot
 flash.CenterDva = 10; % degree of visual angle from fixation center
 flash.CenterPix = dva2pix(flash.CenterDva,eyeScreenDistence,windowRect,screenHeight);
 flash.CenterPosX = xCenter + flash.CenterPix * sin(45);
-flash.CenterPosY = yCenter - flash.CenterPix * sin(45);
+flash.CenterPosY = yCenter - flash.CenterPix * cos(45);
 flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);  % Position the center of the bar at the center of the grating
 
 flash.Image = ones(10, 100, 3);
@@ -115,7 +114,7 @@ referLine.LocPixel = dva2pix(referLine.LocDva,eyeScreenDistence,windowRect,scree
 referLine.LocMat = Shuffle(repelem(referLine.LocPixel,trialNum/3));
 
 referLine.Tilt = 135;  % in degree
-referline.WidthDva = 0.5;
+referline.WidthDva = 0.2;
 referline.LengthDva = 3;
 referline.WidthPix = dva2pix(referline.WidthDva,eyeScreenDistence,windowRect,screenHeight);
 referline.LengthPix = dva2pix(referline.LengthDva,eyeScreenDistence,windowRect,screenHeight);
@@ -204,7 +203,7 @@ for block = 1: blockNum
         while respToBeMade
 
             % draw reference line
-            lineDestinationRect = CenterRectOnPoint(referLine.Rect,xCenter + referLine.LocMat(trial) * sin(45), yCenter - referLine.LocMat(trial) * sin(45));
+            lineDestinationRect = CenterRectOnPoint(referLine.Rect,xCenter + referLine.LocMat(trial) * sin(45), yCenter - referLine.LocMat(trial) * cos(45));
             Screen('DrawTexture',window,referLine.Texture,referLine.Rect,lineDestinationRect,referLine.Tilt);
             Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
             Screen('Flip', window);
