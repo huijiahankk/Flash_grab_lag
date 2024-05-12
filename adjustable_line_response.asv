@@ -34,7 +34,7 @@ grey = WhiteIndex(screenNumber) / 2;
 black = BlackIndex(screenNumber) ;
 red = [255, 0, 0];
 [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 800 600]); %
-% refreshRate = FrameRate(window);
+refreshRate = FrameRate(window);
 refreshRate = 60;
 commandwindow;
 addpath function/;
@@ -72,7 +72,7 @@ maxPhaseShift = 3 * cycleWidth; % Maximum phase shift, typically one cycle width
 maxPhaseShiftdva = pix2dva(ceil(maxPhaseShift),eyeScreenDistence,windowRect,screenHeight);
 gratDurationInSec = 1; % grating show duration in seconds
 gratDuraFrame= refreshRate * gratDurationInSec;
-gratDurationInSec = 3 * cycleWidth /(phaseSpeed * refreshRate);
+3 * cycleWidth/phaseSpeed
 
 % Create a matrix to store the grating image
 [X, Y] = meshgrid(linspace(-gratingRadiusPix, gratingRadiusPix, round(2 * gratingRadiusPix)), linspace(-gratingRadiusPix, gratingRadiusPix, round(2 * gratingRadiusPix)));
@@ -100,9 +100,9 @@ flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHei
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
 flash.LocDegree = [45 135 225 315];
 flash.LocMat =  repmat(flash.LocDegree,1,trialNum/5);
-flash.CenterDva = 280 * maxPhaseShiftdva - flash.WidthPix/2; % degree of visual angle from fixation center
-flash.PresFrame = 60; % frame
-flash.MotDirecMat = repmat([-1 -1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.CenterDva = 280 * maxPhaseShiftdva; % degree of visual angle from fixation center
+flash.PresFrame = 3; % frame
+flash.MotDirecMat = repmat([-1 1],1,trialNum/2); % - 1 means motion outward   1 mean inward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -154,11 +154,10 @@ for block = 1: blockNum
     KbStrokeWait;
 
     flash.LocMatTemp(block,:) = flash.LocMat(randperm(numel(flash.LocMat)));
-    flash.MotDirec(block,:) = flash.MotDirecMat(randperm(numel(flash.MotDirecMat))); 
+    flash.MotDirec(block,:) = flash.MotDirecMat(randperm(numel(flash.MotDirecMat)));
     probe.CenterMatRand(block,:) = probe.CenterMat(randperm(numel(probe.CenterMat)));
 
-%     flash.LocMatTemp
-
+    %     flash.MotDirec(block,:) = flash.MotDirecMat;
 
     %----------------------------------------------------------------------
     %                 Experiment loop
