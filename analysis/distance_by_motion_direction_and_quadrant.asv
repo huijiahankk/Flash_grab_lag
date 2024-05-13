@@ -1,0 +1,39 @@
+% Load the data from the .mat file
+addpath '../data';  % Ensure data path is correctly set
+load('hjh_2024_05_13_10_38.mat');
+
+% Extract required fields
+flashLoc = flash.LocMatTemp;  % Assuming this is a 2D matrix [x, y]
+probePosX = probe.PosXMat;
+probePosY = probe.PosYMat;
+motionDirection = flash.MotDirec;  % Motion direction (-1 inward, 1 outward)
+
+find(flashLoc == 45) && 
+
+% Calculate Euclidean distances
+distances = sqrt((flashLoc(:,1) - probePosX).^2 + (flashLoc(:,2) - probePosY).^2);
+
+% Determine the number of unique quadrants
+numQuadrants = numel(unique(quadrants));
+
+% Initialize figure
+figure;
+
+% Process and plot for each motion direction and each quadrant
+for md = [-1, 1]  % Explicitly handle both directions
+    for quad = 1:numl(flashLoc)  % Iterate over unique quadrants
+        idx = motionDirection == md & quadrants == quad;
+        currentDistances = distances(idx);
+
+        % Correct subplot index calculation
+        subplotIndex = (md == 1) * numQuadrants + find(quad == unique(quadrants));
+        subplot(2, numQuadrants, subplotIndex);  % Adjusted subplot indexing
+        histogram(currentDistances);
+        title(sprintf('Direction: %d, Quadrant: %d', md, quad));
+        xlabel('Distance');
+        ylabel('Frequency');
+    end
+end
+
+% Enhance layout
+sgtitle('Distances by Motion Direction and Quadrant');

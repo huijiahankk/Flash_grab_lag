@@ -98,8 +98,8 @@ flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeigh
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 % flash.Angle = 135;% The angle of rotation in degrees
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
-flash.LocDegree = [45 135 225 315];
-flash.LocMat =  repmat(flash.LocDegree,1,trialNum/length(flash.LocDegree));
+flash.QuadDegree = [45 135 225 315];
+flash.QuadMat =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
 flash.CenterDva = 280 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
 flash.MotDirecMat = repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
@@ -116,8 +116,7 @@ probe.CenterDva = [-0.2 -0.2 0 0.1 0.2] + flash.CenterDva; % degree of visual an
 probe.CenterMat = repelem(probe.CenterDva,blockNum,trialNum/length(probe.CenterDva));
 
 probe.MoveStep = 0.3; % pixel
-probe.TempX = 0;
-probe.TempY = 0;
+
 
 probe.Tilt = 135;  % in degree
 probe.WidthDva = 0.5;
@@ -153,7 +152,7 @@ for block = 1: blockNum
     Screen('Flip', window);
     KbStrokeWait;
 
-    flash.LocMatTemp(block,:) = flash.LocMat(randperm(numel(flash.LocMat)));
+    flash.QuadMatTemp(block,:) = flash.QuadMat(randperm(numel(flash.QuadMat)));
     flash.MotDirec(block,:) = flash.MotDirecMat(randperm(numel(flash.MotDirecMat))); 
     probe.CenterMatRand(block,:) = probe.CenterMat(randperm(numel(probe.CenterMat)));
 
@@ -169,7 +168,7 @@ for block = 1: blockNum
         respToBeMade = true;
         phaseShift = 0; % Initial phase shift (frame)
 
-        flash.LocSecq = flash.LocMatTemp(block,trial);
+        flash.LocSecq = flash.QuadMatTemp(block,trial);
 
         [flash.CenterPosX flash.CenterPosY] = flashLocaQuad(flash.LocSecq,...
             flash.CenterDva,eyeScreenDistence,windowRect,screenHeight,xCenter,yCenter);
