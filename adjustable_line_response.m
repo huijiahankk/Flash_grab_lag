@@ -101,7 +101,7 @@ flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rot
 flash.LocDegree = [45 135 225 315];
 flash.LocMat =  repmat(flash.LocDegree,1,trialNum/5);
 flash.CenterDva = 280 * maxPhaseShiftdva - flash.WidthPix/2; % degree of visual angle from fixation center
-flash.PresFrame = 60; % frame
+flash.PresFrame = 3; % frame
 flash.MotDirecMat = repmat([-1 -1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
