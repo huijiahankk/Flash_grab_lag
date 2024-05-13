@@ -100,9 +100,9 @@ flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHei
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
 flash.LocDegree = [45 135 225 315];
 flash.LocMat =  repmat(flash.LocDegree,1,trialNum/5);
-flash.CenterDva = 280 * maxPhaseShiftdva - flash.WidthPix/2; % degree of visual angle from fixation center
+flash.CenterDva = 280 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
-flash.MotDirecMat = repmat([-1 -1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirecMat = repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
