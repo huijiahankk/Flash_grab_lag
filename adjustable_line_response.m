@@ -9,7 +9,7 @@ if 1
     sbjname = 'hjh';
     isEyelink = 0;
     blockNum= 2;
-    trialNum = 10;
+    trialNum = 20;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
     dlg_title = 'Set experiment parameters ';
@@ -99,7 +99,7 @@ flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHei
 % flash.Angle = 135;% The angle of rotation in degrees
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
 flash.LocDegree = [45 135 225 315];
-flash.LocMat =  repmat(flash.LocDegree,1,trialNum/5);
+flash.LocMat =  repmat(flash.LocDegree,1,trialNum/length(flash.LocDegree));
 flash.CenterDva = 280 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
 flash.MotDirecMat = repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
@@ -158,7 +158,6 @@ for block = 1: blockNum
     probe.CenterMatRand(block,:) = probe.CenterMat(randperm(numel(probe.CenterMat)));
 
 %     flash.LocMatTemp
-
 
     %----------------------------------------------------------------------
     %                 Experiment loop
