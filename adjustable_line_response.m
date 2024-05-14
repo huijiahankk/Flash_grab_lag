@@ -9,7 +9,7 @@ if 1
     sbjname = 'hjh';
     isEyelink = 0;
     blockNum= 2;
-    trialNum = 20;
+    trialNum = 40;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
     dlg_title = 'Set experiment parameters ';
@@ -64,13 +64,13 @@ gratingRadiusPix = dva2pix(gratingRadiusDva,eyeScreenDistence,windowRect,screenH
 numCycles = 18; % Number of cycles
 cycleWidth = gratingRadiusPix / numCycles; % Width of each cycle in pixel
 gratingRect = [xCenter - gratingRadiusPix, yCenter - gratingRadiusPix, xCenter + gratingRadiusPix, yCenter + gratingRadiusPix];
-contrastFactor = 0.1; 
+contrastFactor = 0.1;
 
 % Define variables for the animation speed and the phase of the grating
 phaseSpeed = 4; % Speed of phase shift (pixel/frame)
 maxPhaseShift = 3 * cycleWidth; % Maximum phase shift, typically one cycle width
 maxPhaseShiftdva = pix2dva(ceil(maxPhaseShift),eyeScreenDistence,windowRect,screenHeight);
-gratDurationInSec = 1; % grating show duration in seconds
+gratDurationInSec = 0.8; % grating show duration in seconds
 gratDuraFrame= refreshRate * gratDurationInSec;
 gratDurationInSec = 3 * cycleWidth /(phaseSpeed * refreshRate);
 
@@ -99,10 +99,10 @@ flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHei
 % flash.Angle = 135;% The angle of rotation in degrees
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
 flash.QuadDegree = [45 135 225 315];
-flash.QuadMat =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
+% flash.Quad =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
 flash.CenterDva = 280 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
-flash.MotDirecMat = repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -113,10 +113,9 @@ flash.Texture = Screen('MakeTexture', window, flash.Image);
 %            parameters of black line
 %----------------------------------------------------------------------
 probe.CenterDva = [-0.2 -0.2 0 0.1 0.2] + flash.CenterDva; % degree of visual angle
-probe.CenterMat = repelem(probe.CenterDva,blockNum,trialNum/length(probe.CenterDva));
+probe.Center = repelem(probe.CenterDva,blockNum,trialNum/length(probe.CenterDva));
 
 probe.MoveStep = 0.3; % pixel
-
 
 probe.Tilt = 135;  % in degree
 probe.WidthDva = 0.5;
@@ -133,6 +132,29 @@ probe.Image(:,:,3) = probe.Image(:,:,2);
 probe.Texture = Screen('MakeTexture', window, probe.Image);
 % probe.Rect = Screen('Rect',probe.Texture);
 probe.Size = flash.Size;
+
+
+%----------------------------------------------------------------------
+%        Define all possible combinations of parameters
+%----------------------------------------------------------------------
+% Create all possible combinations
+combinations = combvec(flash.QuadDegree, flash.MotDirec, probe.CenterDva)';
+numCombinations = size(combinations, 1);
+
+% Number of repetitions to ensure at least 40 trials for each combination
+numRepetitions = ceil(trialNum / numCombinations);
+
+% Repeat the combinations to ensure we have enough trials
+combinationsRepeated = repmat(combinations, numRepetitions, 1);
+
+% Shuffle the repeated combinations
+shuffledCombinations = combinationsRepeated(randperm(size(combinationsRepeated, 1)), :);
+
+% Assign the combinations to the parameters for the current block
+flash.QuadMat = shuffledCombinations(:, 1)';
+flash.MotDirecMat = shuffledCombinations(:, 2)';
+probe.CenterMat  = shuffledCombinations(:, 3)';
+
 
 for block = 1: blockNum
     %----------------------------------------------------------------------
@@ -152,11 +174,6 @@ for block = 1: blockNum
     Screen('Flip', window);
     KbStrokeWait;
 
-    flash.QuadMatTemp(block,:) = flash.QuadMat(randperm(numel(flash.QuadMat)));
-    flash.MotDirec(block,:) = flash.MotDirecMat(randperm(numel(flash.MotDirecMat))); 
-    probe.CenterMatRand(block,:) = probe.CenterMat(randperm(numel(probe.CenterMat)));
-
-%     flash.LocMatTemp
 
     %----------------------------------------------------------------------
     %                 Experiment loop
@@ -168,20 +185,20 @@ for block = 1: blockNum
         respToBeMade = true;
         phaseShift = 0; % Initial phase shift (frame)
 
-        flash.LocSecq = flash.QuadMatTemp(block,trial);
+        flash.LocSecq = flash.QuadMat(trial);
 
         [flash.CenterPosX flash.CenterPosY] = flashLocaQuad(flash.LocSecq,...
             flash.CenterDva,eyeScreenDistence,windowRect,screenHeight,xCenter,yCenter);
         flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);  % Position the center of the bar at the center of the grating
-%         flash.CenterMatPosX(block,trial) = flash.CenterPosX;
-%         flash.CenterMatPosY(block,trial) = flash.CenterPosY;
+        %         flash.CenterMatPosX(block,trial) = flash.CenterPosX;
+        %         flash.CenterMatPosY(block,trial) = flash.CenterPosY;
         flash.CenterDvaResp(block,trial) = flash.CenterDva;
 
         [probe.CenterPosX probe.CenterPosY] = flashLocaQuad(flash.LocSecq,...
-            probe.CenterMatRand(block,trial),eyeScreenDistence,windowRect,screenHeight,xCenter,yCenter);
-%         probe.CenterMatPosX(block,trial) = probe.CenterPosX;
-%         probe.CenterMatPosY(block,trial) = probe.CenterPosY;
-        probe.CenterDvaResp(block,trial) = probe.CenterMatRand(block,trial);
+            probe.CenterMat(trial),eyeScreenDistence,windowRect,screenHeight,xCenter,yCenter);
+        %         probe.CenterMatPosX(block,trial) = probe.CenterPosX;
+        %         probe.CenterMatPosY(block,trial) = probe.CenterPosY;
+                probe.CenterDvaResp(block,trial) = probe.CenterMat(trial);
 
 
         if  flash.LocSecq == 135 | flash.LocSecq == 315
@@ -197,10 +214,10 @@ for block = 1: blockNum
         for i = 1:gratDuraFrame
 
             flashPresentFlag = 0;
-            if flash.MotDirec(block,trial) == - 1
+            if flash.MotDirecMat(trial) == - 1
                 % Calculate the current phase shift
                 phaseShift = phaseShift - phaseSpeed;
-            elseif flash.MotDirec(block,trial) == 1
+            elseif flash.MotDirecMat(trial) == 1
                 phaseShift = phaseShift + phaseSpeed;
             end
 
@@ -236,11 +253,11 @@ for block = 1: blockNum
 
                 % Check if the phaseShift is greater than maxPhaseShift and the direction has changed to inward
                 %  - 1 means motion outward   1 mean inward
-                if flash.MotDirec(block,trial) == 1  &&   phaseShift > maxPhaseShift
+                if flash.MotDirecMat(trial) == 1  &&   phaseShift > maxPhaseShift
                     % Draw the rotated red bar only when the direction changes to inward
                     Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
                     flashPresentFlag = 1; % Set flag to indicate the flash was presented
-                elseif  flash.MotDirec(block,trial) == -1  &&   phaseShift < - maxPhaseShift
+                elseif  flash.MotDirecMat(trial) == -1  &&   phaseShift < - maxPhaseShift
                     % Draw the rotated red bar only when the direction changes to inward
                     Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
                     flashPresentFlag = 1; % Set flag to indicate the flash was presented

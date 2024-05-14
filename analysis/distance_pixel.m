@@ -2,64 +2,71 @@
 
 clear all;
 addpath '../function';
-addpath '../data';
-load('hjh_2024_05_13_14_22.mat');
 
-% sbjnames = {'hjh','jye'};
-% path = strcat('../data/');
-% cd(path);
-%
-%
-% for sbjnum = 1:length(sbjnames)
-%
-%         s1 = sbjnames(sbjnum);
-%         s2 = '*.mat';
-%         s3 = strcat(s1,s2);
-% %         load(fullfile(path, s3));
-%         Files = dir(fullfile(path, s3));
-%         load (Files.name);
-% end
+sbjnames = {'hjh'};
+path = '../data'; 
+cd(path);
 
-[urI,urO,lrI,lrO,llI,llO,ulI,ulO] = deal([]);
 
-for block = 1:blockNum
-    for trial = 1: trialNum
+for sbjnum = 1:length(sbjnames)
+    s1 = sbjnames(sbjnum);
+    s2 = '*.mat';
+    s3 = strcat(s1,s2);
+    Files = dir(fullfile(path, s3{1}));
+    load (Files.name);
 
-        distancePix(block,trial) =  flash.CenterDvaResp(block,trial) - sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2) ;
 
-        if flash.QuadMatTemp(block,trial) == 45
-            if flash.MotDirec(block,trial) == - 1
-                urI = [urI,distancePix(block,trial)];
-            elseif flash.MotDirec(block,trial) == 1
-                urO = [urO,distancePix(block,trial)];
+    [upperRightInward,upperRightOutward,lowerRightInward,lowerRightOutward,lowerLeftInward,...
+        lowerLeftOutward,upperLeftInward,upperLeftOurward] = deal([]);
+
+
+flash.QuadMat = shuffledCombinations(:, 1)';
+flash.MotDirecMat = shuffledCombinations(:, 2)';
+probe.CenterMat  = shuffledCombinations(:, 3)';
+
+
+
+    for block = 1:blockNum
+        for trial = 1: trialNum
+%             fprintf('Quad: %d, MotDir: %d\n', flash.QuadMat(trial), flash.MotDirecMat(trial));
+
+            distancePix(block,trial) =  flash.CenterDvaResp(trial) - sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2) ;
+
+            if flash.QuadMat(trial) == 45
+                if flash.MotDirecMat(trial) == - 1
+                    upperRightInward = [upperRightInward,distancePix(block,trial)];
+                elseif flash.MotDirecMat(trial) == 1
+                    upperRightOutward = [upperRightOutward,distancePix(block,trial)];
+                end
+            elseif flash.QuadMat(trial) == 135
+                if flash.MotDirecMat(trial) == - 1
+                    lowerRightInward = [lowerRightInward,distancePix(block,trial)];
+                elseif flash.MotDirecMat(trial) == 1
+                    lowerRightOutward = [lowerRightOutward,distancePix(block,trial)];
+                end
+            elseif flash.QuadMat(trial) == 225
+                if flash.MotDirecMat(trial) == - 1
+                    lowerLeftInward = [lowerLeftInward,distancePix(block,trial)];
+                elseif flash.MotDirecMat(trial) == 1
+                    lowerLeftOutward = [lowerLeftOutward,distancePix(block,trial)];
+                end
+            elseif flash.QuadMat(trial) == 315
+                if flash.MotDirecMat(trial) == - 1
+                    upperLeftInward = [upperLeftInward,distancePix(block,trial)];
+                elseif flash.MotDirecMat(trial) == 1
+                    upperLeftOurward = [upperLeftOurward,distancePix(block,trial)];
+                end
             end
-        elseif flash.QuadMatTemp(block,trial) == 135
-            if flash.MotDirec(block,trial) == - 1
-                lrI = [lrI,distancePix(block,trial)];
-            elseif flash.MotDirec(block,trial) == 1
-                lrO = [lrO,distancePix(block,trial)];
-            end
-        elseif flash.QuadMatTemp(block,trial) == 225
-            if flash.MotDirec(block,trial) == - 1
-                llI = [llI,distancePix(block,trial)];
-            elseif flash.MotDirec(block,trial) == 1
-                llO = [llO,distancePix(block,trial)];
-            end
-        elseif flash.QuadMatTemp(block,trial) == 315
-            if flash.MotDirec(block,trial) == - 1
-                ulI = [ulI,distancePix(block,trial)];
-            elseif flash.MotDirec(block,trial) == 1
-                ulO = [ulO,distancePix(block,trial)];
-            end
+
         end
-
     end
 end
 
-means = [mean(urI), mean(urO), mean(lrI), mean(lrO), ...
-         mean(llI), mean(llO), mean(ulI), mean(ulO)];
+means = [mean(upperRightInward), mean(upperRightOutward), mean(lowerRightInward), mean(lowerRightOutward), ...
+    mean(lowerLeftInward), mean(lowerLeftOutward), mean(upperLeftInward), mean(upperLeftOurward)];
 
-labels = {'urI', 'urO', 'lrI', 'lrO', 'llI', 'llO', 'ulI', 'ulO'};
+labels = {'upperRightInward', 'upperRightOutward', 'lowerRightInward', 'lowerRightOutward'...
+    'lowerLeftInward', 'lowerLeftOutward', 'upperLeftInward', 'upperLeftOurward'};
 
 % Create a bar chart
 bar(means);
