@@ -78,7 +78,7 @@ set(gca, 'XTickLabel', labels);
 % Add titles and labels
 title('Mean of Each Condition');
 xlabel('Condition');
-ylabel('Mean distance from the flash');
+ylabel('Mean distance from the flash (dva)');
 
 % Show the plot
 grid on;
