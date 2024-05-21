@@ -116,8 +116,8 @@ flash.QuadDegree = [45 135 225 315];
 % flash.Quad =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
 % flash.CenterDva = 180 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
-flash.MotDirec = [1 -1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
-flash.phaseshiftFactor = 2; % flash location multiply cycleWidth 
+flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.phaseshiftFactor = 1; % flash location multiply cycleWidth 
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -129,7 +129,7 @@ flash.Texture = Screen('MakeTexture', window, flash.Image);
 %----------------------------------------------------------------------
 
 flash.CenterDva = pix2dva(flash.phaseshiftFactor * cycleWidth,eyeScreenDistence,windowRect,screenHeight);
-probe.CenterDva = [-0.2 -0.2 0 0.1 0.2] + flash.CenterDva; % degree of visual angle
+probe.CenterDva = [-0.5 -0.25 0 0.25 0.5] + flash.CenterDva; % degree of visual angle
 
 % probe.Center = repelem(probe.CenterDva,blockNum,trialNum/length(probe.CenterDva));
 probe.MoveStep = 0.3; % pixel

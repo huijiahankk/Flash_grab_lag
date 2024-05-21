@@ -3,7 +3,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'hjh'};
+sbjnames = {'hjhnew'};
 path = '../data'; 
 cd(path);
 
@@ -33,9 +33,9 @@ probe.CenterMat  = shuffledCombinations(:, 3)';
             distancePix(block,trial) =  flash.CenterDvaResp(trial) - sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2) ;
 
             if flash.QuadMat(trial) == 45
-                if flash.MotDirecMat(trial) == - 1
+                if flash.MotDirecMat(trial) == - 1   % -1 inward
                     upperRightInward = [upperRightInward,distancePix(block,trial)];
-                elseif flash.MotDirecMat(trial) == 1
+                elseif flash.MotDirecMat(trial) == 1   % 1 outward 
                     upperRightOutward = [upperRightOutward,distancePix(block,trial)];
                 end
             elseif flash.QuadMat(trial) == 135
