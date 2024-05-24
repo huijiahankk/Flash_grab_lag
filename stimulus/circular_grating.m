@@ -8,8 +8,8 @@ clear all;close all;
 if 1
     sbjname = 'hjh';
     isEyelink = 0;
-    blockNum= 2;
-    trialNum = 40;
+    blockNum= 1 ;
+    trialNum = 24;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
     dlg_title = 'Set experiment parameters ';
@@ -39,7 +39,7 @@ refreshRate = FrameRate(window);
 commandwindow;
 addpath ../function/;
 
-eyeScreenDistence = 57;  % 78cm  68sunnannan
+eyeScreenDistence = 66;  %  57 cm
 screenHeight = 33.5; % 26.8 cm
 % Get the number of pixels in the vertical dimension of the screen
 screenHeightPixels = windowRect(4);
@@ -61,23 +61,25 @@ xCenter = windowRect(3) / 2; % Center X-coordinate
 yCenter = windowRect(4) / 2; % Center Y-coordinate
 gratingRadiusDva = 20; % degree of visual angle
 gratingRadiusPix = dva2pix(gratingRadiusDva,eyeScreenDistence,windowRect,screenHeight); % Radius of the grating
- 
+
 gratingRect = [xCenter - gratingRadiusPix, yCenter - gratingRadiusPix, xCenter + gratingRadiusPix, yCenter + gratingRadiusPix];
 contrastFactor = 0.1;
-gratingMaskRadius = 20; % degree of visual angle
+gratingMaskRadius = 15; % degree of visual angle
 gratingMaskRadiusPix = dva2pix(gratingMaskRadius,eyeScreenDistence,windowRect,screenHeight); % Radius of the grating
 
 % Define variables for the animation speed and the phase of the grating
 phaseSpeed = 4; % Speed of phase shift (pixel/frame)
+% phaseSpeedDva = pix2dva(phaseSpeed,eyeScreenDistence,windowRect,screenHeight);
+% phaseSpeedDvaPerSec = phaseSpeedDva * pi * 60;
 
-cycleWidthDva = 7.3;
+cycleWidthDva = 5;  % 5.6 in flash grab patient 
 cycleWidthPix = dva2pix(cycleWidthDva,eyeScreenDistence,windowRect,screenHeight);
 quotient = floor(cycleWidthPix/phaseSpeed);
-cycleWidth = quotient * phaseSpeed;  % Width of each cycle in pixel   rotation segment dva 7.3 
+cycleWidth = quotient * phaseSpeed;  % Width of each cycle in pixel   rotation segment dva 7.3
 
-maxPhaseShift = 1 * cycleWidth; % Maximum phase shift, typically one cycle width
+
 % maxPhaseShiftdva = pix2dva(ceil(maxPhaseShift),eyeScreenDistence,windowRect,screenHeight);
-gratDurationInSec = 1; % grating show duration in seconds
+gratDurationInSec = 0.8; % grating show duration in seconds
 gratDuraFrame= refreshRate * gratDurationInSec;
 % gratDurationInSec = 3 * cycleWidth /(phaseSpeed * refreshRate);
 
@@ -112,26 +114,33 @@ flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeigh
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 % flash.Angle = 135;% The angle of rotation in degrees
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
-flash.QuadDegree = [45 135 225 315];
+flash.QuadDegree = [45 135 225 315]; % [45 45 45 45]     [45 135 225 315]
 % flash.Quad =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
 % flash.CenterDva = 180 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
 flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
-flash.phaseshiftFactor = 1; % flash location multiply cycleWidth 
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,3) = flash.Image(:,:,2);
 flash.Texture = Screen('MakeTexture', window, flash.Image);
 
+% flash.cycleWidthshiftFactor = 0.77; % flash location multiply cycleWidth
+% flash.CenterPix = flash.cycleWidthshiftFactor * cycleWidth;
+% flash.CenterDva = pix2dva(flash.CenterPix,eyeScreenDistence,windowRect,screenHeight);  % 5.6 dva
+% flash.CenterDva = 7.3;
+flash.CenterDva = cycleWidthDva * 2;
+flash.CenterPix = dva2pix(flash.CenterDva,eyeScreenDistence,windowRect,screenHeight);
+maxPhaseShift = flash.CenterPix; % Maximum phase shift, typically one cycle width
+
+
 %----------------------------------------------------------------------
 %            parameters of black line
 %----------------------------------------------------------------------
+probe.shiftDva = [-1 0 1];
+probe.shiftPix = dva2pix(probe.shiftDva,eyeScreenDistence,windowRect,screenHeight) + flash.CenterPix;
 
-flash.CenterDva = pix2dva(flash.phaseshiftFactor * cycleWidth,eyeScreenDistence,windowRect,screenHeight);
-probe.CenterDva = [-0.5 -0.25 0 0.25 0.5] + flash.CenterDva; % degree of visual angle
 
-% probe.Center = repelem(probe.CenterDva,blockNum,trialNum/length(probe.CenterDva));
 probe.MoveStep = 0.3; % pixel
 probe.Tilt = 135;  % in degree
 probe.WidthDva = 0.5;
@@ -154,7 +163,7 @@ probe.Size = flash.Size;
 %        Define all possible combinations of parameters
 %----------------------------------------------------------------------
 % Create all possible combinations
-combinations = combvec(flash.QuadDegree, flash.MotDirec, probe.CenterDva)';
+combinations = combvec(flash.QuadDegree, flash.MotDirec, probe.shiftPix)';
 numCombinations = size(combinations, 1);
 
 % Number of repetitions to ensure at least 40 trials for each combination
@@ -169,7 +178,7 @@ shuffledCombinations = combinationsRepeated(randperm(size(combinationsRepeated, 
 % Assign the combinations to the parameters for the current block
 flash.QuadMat = shuffledCombinations(:, 1)';
 flash.MotDirecMat = shuffledCombinations(:, 2)';
-probe.CenterMat  = shuffledCombinations(:, 3)';
+probe.shiftPixMat  = shuffledCombinations(:, 3)';
 
 
 for block = 1: blockNum
@@ -196,15 +205,16 @@ for block = 1: blockNum
 
 
     for trial = 1:trialNum
-        
+
         phaseShift = 0; % Initial phase shift (frame)
         prekeyIsDown = 0;
         phaseSpeed = abs(phaseSpeed);
         flash.LocSecq = flash.QuadMat(trial);
         flash.CenterDvaResp(block,trial) = flash.CenterDva;
-        [probe.CenterPosX probe.CenterPosY] = flashDvaLocaQuad(flash.LocSecq,...
-            probe.CenterMat(trial),eyeScreenDistence,windowRect,screenHeight,xCenter,yCenter);
-        probe.CenterDvaResp(block,trial) = probe.CenterMat(trial);
+        [probe.CenterPosX probe.CenterPosY] = flashPixLocaQuad(flash.LocSecq,...
+            probe.shiftPixMat(trial),eyeScreenDistence,windowRect,screenHeight,xCenter,yCenter);
+
+        probe.CenterPixResp(block,trial) = probe.shiftPixMat(trial);
 
 
         if  flash.LocSecq == 135 | flash.LocSecq == 315
@@ -220,14 +230,12 @@ for block = 1: blockNum
         for i = 1:gratDuraFrame
 
             flashPresentFlag = 0;
-
             phaseShift = phaseShift + flash.MotDirecMat(trial) * phaseSpeed; % Update R directly using speed
-%             phaseShift = phaseShift + phaseSpeed;
-
-%             % Ensure phaseShift is within a single cycle width
-%             if abs(phaseShift) > cycleWidth * 2
-%                 phaseShift = mod(phaseShift, cycleWidth * 2);
-%             end
+%                         phaseShift = phaseShift + phaseSpeed;
+            % Ensure phaseShift is within a single cycle width
+            %             if abs(phaseShift) > cycleWidth * 2
+            %                 phaseShift = mod(phaseShift, cycleWidth * 2);
+            %             end
 
             % Generate the dynamic concentric square-wave grating
             dynamicR = R + phaseShift; % Apply the phase shift
@@ -264,29 +272,34 @@ for block = 1: blockNum
             % Reset the phaseShift to create continuous motion
             if phaseShift >= maxPhaseShift | phaseShift <= -maxPhaseShift
                 phaseSpeed = -phaseSpeed; % Reverse the direction of motion
-            end   
-                % Check if the phaseShift is greater than maxPhaseShift and the direction has changed to inward
-                %  - 1 means motion outward   1 mean inward
-                if flash.MotDirecMat(trial) == 1  &&  phaseShift >= maxPhaseShift
-                    % Draw the rotated red bar only when the direction changes to inward
-                    
-                    flash.CenterPosX = xCenter + phaseshiftFactorX * phaseShift * flash.phaseshiftFactor * sind(45);
-                    flash.CenterPosY = yCenter + phaseshiftFactorY * phaseShift * flash.phaseshiftFactor * cosd(45);
-                    flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
-                    Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
-                    phaseShiftMat(trial) = phaseShift;
-                    flashPresentFlag = 1; % Set flag to indicate the flash was presented
+            end
+            % Check if the phaseShift is greater than maxPhaseShift and the direction has changed to inward
+            %  - 1 means motion outward   1 mean inward (flash doesn't on the border) 
+            if flash.MotDirecMat(trial) == 1  &&  phaseShift >= maxPhaseShift  % ||  ...   
+                %                         flash.MotDirecMat(trial) == -1  &&   phaseShift <= - maxPhaseShift
+                % Draw the rotated red bar only when the direction changes to inward
 
-                elseif  flash.MotDirecMat(trial) == -1  &&   phaseShift <= - maxPhaseShift
-                    % Draw the rotated red bar only when the direction changes to inward
-                    flash.CenterPosX = xCenter + phaseshiftFactorX * abs(phaseShift) * flash.phaseshiftFactor  * sind(45);
-                    flash.CenterPosY = yCenter + phaseshiftFactorY * abs(phaseShift) * flash.phaseshiftFactor  * cosd(45);
-                    flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
-                    Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
-                    phaseShiftMat(trial) = phaseShift;
-                    flashPresentFlag = 1; % Set flag to indicate the flash was presented
-                end
-%             end
+                flash.CenterPosX = xCenter + phaseshiftFactorX * phaseShift  * sind(45);
+                flash.CenterPosY = yCenter + phaseshiftFactorY * phaseShift  * cosd(45);
+                %                     flash.CenterPosX = xCenter + phaseshiftFactorX * maxPhaseShift * sind(45);
+                %                     flash.CenterPosY = yCenter +  phaseshiftFactorY * maxPhaseShift * cosd(45);
+                flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
+                Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
+                phaseShiftMat(trial) = phaseShift;
+                flashPresentFlag = 1; % Set flag to indicate the flash was presented
+
+            elseif  flash.MotDirecMat(trial) == -1  &&   phaseShift <= - maxPhaseShift
+                % Draw the rotated red bar only when the direction changes to inward
+                flash.CenterPosX = xCenter + phaseshiftFactorX * abs(phaseShift)  * sind(45);
+                flash.CenterPosY = yCenter + phaseshiftFactorY * abs(phaseShift)  * cosd(45);
+                %                     flash.CenterPosX = xCenter + phaseshiftFactorX * maxPhaseShift * sind(45);
+                %                     flash.CenterPosY = yCenter + phaseshiftFactorY * maxPhaseShift * cosd(45);
+                flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
+                Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
+                phaseShiftMat(trial) = phaseShift;
+                flashPresentFlag = 1; % Set flag to indicate the flash was presented
+            end
+%                         end
 
 
             %         Draw the grey disk and fixtion in the center of the screen
@@ -312,45 +325,45 @@ for block = 1: blockNum
             % Check each connected keyboard
             for i = 1:length(keyboardIndices)
                 [keyIsDown, ~, keyCode] = KbCheck(keyboardIndices(i));
-%                 if keyIsDown && ~prekeyIsDown   % prevent the same press was treated twice
-                    if keyIsDown
-                        if keyCode(KbName('ESCAPE'))
-                            ShowCursor;
-                            sca;
-                            return;
-                        elseif keyCode(KbName('LeftArrow'))
-                            if  flash.LocSecq == 135 || flash.LocSecq == 315
-                                probe.TempX = probe.TempX - probe.MoveStep;
-                                probe.TempY = probe.TempY - probe.MoveStep;
-                            else  flash.LocSecq == 45 | flash.LocSecq == 225;
-                                probe.TempX = probe.TempX - probe.MoveStep;
-                                probe.TempY = probe.TempY + probe.MoveStep;
-                            end
-                        elseif keyCode(KbName('RightArrow'))
-                            if  flash.LocSecq == 135 || flash.LocSecq == 315
-                                probe.TempX = probe.TempX + probe.MoveStep;
-                                probe.TempY = probe.TempY + probe.MoveStep;
-                            else  flash.LocSecq == 45 | flash.LocSecq == 225
-                                probe.TempX = probe.TempX + probe.MoveStep;
-                                probe.TempY = probe.TempY - probe.MoveStep;
-                            end
-                        elseif keyCode(KbName('Space'))
-                            respToBeMade = false;
+                %                 if keyIsDown && ~prekeyIsDown   % prevent the same press was treated twice
+                if keyIsDown
+                    if keyCode(KbName('ESCAPE'))
+                        ShowCursor;
+                        sca;
+                        return;
+                    elseif keyCode(KbName('LeftArrow'))
+                        if  flash.LocSecq == 135 || flash.LocSecq == 315
+                            probe.TempX = probe.TempX - probe.MoveStep;
+                            probe.TempY = probe.TempY - probe.MoveStep;
+                        else  flash.LocSecq == 45 | flash.LocSecq == 225;
+                            probe.TempX = probe.TempX - probe.MoveStep;
+                            probe.TempY = probe.TempY + probe.MoveStep;
                         end
-                        prekeyIsDown = keyIsDown;
+                    elseif keyCode(KbName('RightArrow'))
+                        if  flash.LocSecq == 135 || flash.LocSecq == 315
+                            probe.TempX = probe.TempX + probe.MoveStep;
+                            probe.TempY = probe.TempY + probe.MoveStep;
+                        else  flash.LocSecq == 45 | flash.LocSecq == 225
+                            probe.TempX = probe.TempX + probe.MoveStep;
+                            probe.TempY = probe.TempY - probe.MoveStep;
+                        end
+                    elseif keyCode(KbName('Space'))
+                        respToBeMade = false;
                     end
-%                 end
+                    prekeyIsDown = keyIsDown;
+                end
+                %                 end
             end
             % draw reference line
-            probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX + probe.TempX, probe.CenterPosY + probe.TempY);
+            probe.DestinationRect = CenterRectOnPoint(probe.Size,xCenter + probe.CenterPosX + probe.TempX, yCenter + probe.CenterPosY + probe.TempY);
             Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,flash.Angle); % flash.Rect
             Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
             Screen('Flip', window);
             % You can add a small pause to prevent CPU overloading
             WaitSecs(0.01);
         end
-        probe.PosXMat(block,trial) = probe.TempX;
-        probe.PosYMat(block,trial) = probe.TempY;
+        probe.PosXMat(block,trial) = probe.CenterPosX + probe.TempX;
+        probe.PosYMat(block,trial) = probe.CenterPosY + probe.TempY;
     end
 end
 

@@ -3,7 +3,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'hjhnew'};
+sbjnames = {'hjhresp'};
 path = '../data'; 
 cd(path);
 
@@ -20,17 +20,18 @@ for sbjnum = 1:length(sbjnames)
         lowerLeftOutward,upperLeftInward,upperLeftOurward] = deal([]);
 
 
-flash.QuadMat = shuffledCombinations(:, 1)';
-flash.MotDirecMat = shuffledCombinations(:, 2)';
-probe.CenterMat  = shuffledCombinations(:, 3)';
+% flash.QuadMat = shuffledCombinations(:, 1)';
+% flash.MotDirecMat = shuffledCombinations(:, 2)';
+% probe.CenterMat  = shuffledCombinations(:, 3)';
 
 
 
     for block = 1:blockNum
         for trial = 1: trialNum
-%             fprintf('Quad: %d, MotDir: %d\n', flash.QuadMat(trial), flash.MotDirecMat(trial));
 
-            distancePix(block,trial) =  flash.CenterDvaResp(trial) - sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2) ;
+%             flash.CenterPix = flash.phaseshiftFactor * cycleWidth;
+%             flash.CenterPixResp(trial) = dva2pix(dva,eyeScreenDistence,windowRect,screenHeight);
+            distancePix(block,trial) =  sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2) - flash.CenterPix;
 
             if flash.QuadMat(trial) == 45
                 if flash.MotDirecMat(trial) == - 1   % -1 inward
@@ -80,7 +81,5 @@ title('Mean of Each Condition');
 xlabel('Condition');
 ylabel('Mean distance from the flash (dva)');
 
-% Show the plot
-grid on;
 
 
