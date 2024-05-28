@@ -3,7 +3,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'hjhresp'};
+sbjnames = {'hjh'};
 path = '../data'; 
 cd(path);
 
