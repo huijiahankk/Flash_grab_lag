@@ -29,9 +29,10 @@ for sbjnum = 1:length(sbjnames)
     for block = 1:blockNum
         for trial = 1: trialNum
 
-%             flash.CenterPix = flash.phaseshiftFactor * cycleWidth;
-%             flash.CenterPixResp(trial) = dva2pix(dva,eyeScreenDistence,windowRect,screenHeight);
-            distancePix(block,trial) =  sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2) - flash.CenterPix;
+            probe.CenterDist(block,trial) = sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2);
+            flash.CenterDist(block,trial) = sqrt(flash.CenterPosX(block,trial)^2 + flash.CenterPosY(block,trial)^2);
+
+            distancePix(block,trial) =  probe.CenterDist(block,trial) - flash.CenterDist(block,trial) ;
 
             if flash.QuadMat(trial) == 45
                 if flash.MotDirecMat(trial) == - 1   % -1 inward
