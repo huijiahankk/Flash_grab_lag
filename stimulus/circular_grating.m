@@ -76,7 +76,7 @@ cycleWidthDva = 5;  % 5.6 in flash grab patient
 cycleWidthPix = dva2pix(cycleWidthDva,eyeScreenDistence,windowRect,screenHeight) + 1;
 % maxPhaseShiftDva = 10; % flash.CenterPix, Maximum phase shift, typically one cycle width
 flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
-flash.maxPhaseShiftPix = [flash.maxPhaseShift - 10   flash.maxPhaseShift + 10];
+flash.maxPhaseShiftPix = [flash.maxPhaseShift - 0  flash.maxPhaseShift + 0];
 
 % maxPhaseShiftdva = pix2dva(ceil(maxPhaseShift),eyeScreenDistence,windowRect,screenHeight);
 gratDurationInSec = 1.5; % grating show duration in seconds
@@ -111,11 +111,11 @@ flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeigh
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 % flash.Angle = 135;% The angle of rotation in degrees
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
-flash.QuadDegree = [45 135 225 315]; % [45 45 45 45]     [45 135 225 315]
+flash.QuadDegree = [315 315 315 315]; % [45 45 45 45]     [45 135 225 315]
 % flash.Quad =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
 % flash.CenterDva = 180 * maxPhaseShiftdva; % degree of visual angle from fixation center
 flash.PresFrame = 3; % frame
-flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [-1 -1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -125,7 +125,7 @@ flash.Texture = Screen('MakeTexture', window, flash.Image);
 %----------------------------------------------------------------------
 %            parameters of black line
 %----------------------------------------------------------------------
-probe.shiftDva = [-1 1];
+probe.shiftDva = [0 0];
 probe.shiftPix = dva2pix(probe.shiftDva,eyeScreenDistence,windowRect,screenHeight);
 
 probe.MoveStep = 0.3; % pixel
@@ -199,7 +199,7 @@ for block = 1: blockNum
         flash.LocSecq = flash.QuadMat(trial);
 
         % Add jittering to maxPhaseShift   Random pixel shift less than 5
-        jitterAmount = floor(rand * 10) ;  
+        jitterAmount(block,trial) = 0; %floor(rand * 10);  
 
         if  flash.LocSecq == 135 | flash.LocSecq == 315
             flash.Angle = 45;

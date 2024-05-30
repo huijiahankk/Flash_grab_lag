@@ -3,7 +3,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'hjh'};
+sbjnames = {'hjh2'};
 path = '../data'; 
 cd(path);
 
@@ -17,7 +17,7 @@ for sbjnum = 1:length(sbjnames)
 
 
     [upperRightInward,upperRightOutward,lowerRightInward,lowerRightOutward,lowerLeftInward,...
-        lowerLeftOutward,upperLeftInward,upperLeftOurward] = deal([]);
+        lowerLeftOutward,upperLeftInward,upperLeftOutward] = deal([]);
 
 
 % flash.QuadMat = shuffledCombinations(:, 1)';
@@ -29,8 +29,8 @@ for sbjnum = 1:length(sbjnames)
     for block = 1:blockNum
         for trial = 1: trialNum
 
-            probe.CenterDist(block,trial) = sqrt(probe.PosXMat(block,trial)^2 + probe.PosYMat(block,trial)^2);
-            flash.CenterDist(block,trial) = sqrt(flash.CenterPosX(block,trial)^2 + flash.CenterPosY(block,trial)^2);
+            probe.CenterDist(block,trial) = sqrt((probe.PosXMat(block,trial) - xCenter)^2 + (probe.PosYMat(block,trial)-yCenter)^2);
+            flash.CenterDist(block,trial) = sqrt((flash.CenterPosX(block,trial) - xCenter)^2 + (flash.CenterPosY(block,trial)-yCenter)^2);
 
             distancePix(block,trial) =  probe.CenterDist(block,trial) - flash.CenterDist(block,trial) ;
 
@@ -56,7 +56,7 @@ for sbjnum = 1:length(sbjnames)
                 if flash.MotDirecMat(trial) == - 1
                     upperLeftInward = [upperLeftInward,distancePix(block,trial)];
                 elseif flash.MotDirecMat(trial) == 1
-                    upperLeftOurward = [upperLeftOurward,distancePix(block,trial)];
+                    upperLeftOutward = [upperLeftOutward,distancePix(block,trial)];
                 end
             end
 
@@ -66,7 +66,7 @@ end
 
 
 means = [mean(upperRightInward), mean(upperRightOutward), mean(lowerRightInward), mean(lowerRightOutward), ...
-    mean(lowerLeftInward), mean(lowerLeftOutward), mean(upperLeftInward), mean(upperLeftOurward)];
+    mean(lowerLeftInward), mean(lowerLeftOutward), mean(upperLeftInward), mean(upperLeftOutward)];
 
 dvamean = pix2dva(means,eyeScreenDistence,windowRect,screenHeight);
 
