@@ -3,7 +3,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'hjh2'};
+sbjnames = {'hjh','pilotfour'};
 path = '../data'; 
 cd(path);
 
@@ -36,27 +36,27 @@ for sbjnum = 1:length(sbjnames)
 
             if flash.QuadMat(trial) == 45
                 if flash.MotDirecMat(trial) == - 1   % -1 inward
-                    upperRightInward = [upperRightInward,distancePix(block,trial)];
+                    upperRightInward(sbjnum,:) = [upperRightInward,distancePix(block,trial)];
                 elseif flash.MotDirecMat(trial) == 1   % 1 outward 
-                    upperRightOutward = [upperRightOutward,distancePix(block,trial)];
+                    upperRightOutward(sbjnum,:) = [upperRightOutward,distancePix(block,trial)];
                 end
             elseif flash.QuadMat(trial) == 135
                 if flash.MotDirecMat(trial) == - 1
-                    lowerRightInward = [lowerRightInward,distancePix(block,trial)];
+                    lowerRightInward(sbjnum,:) = [lowerRightInward,distancePix(block,trial)];
                 elseif flash.MotDirecMat(trial) == 1
-                    lowerRightOutward = [lowerRightOutward,distancePix(block,trial)];
+                    lowerRightOutward(sbjnum,:) = [lowerRightOutward,distancePix(block,trial)];
                 end
             elseif flash.QuadMat(trial) == 225
                 if flash.MotDirecMat(trial) == - 1
-                    lowerLeftInward = [lowerLeftInward,distancePix(block,trial)];
+                    lowerLeftInward(sbjnum,:) = [lowerLeftInward,distancePix(block,trial)];
                 elseif flash.MotDirecMat(trial) == 1
-                    lowerLeftOutward = [lowerLeftOutward,distancePix(block,trial)];
+                    lowerLeftOutward(sbjnum,:) = [lowerLeftOutward,distancePix(block,trial)];
                 end
             elseif flash.QuadMat(trial) == 315
                 if flash.MotDirecMat(trial) == - 1
-                    upperLeftInward = [upperLeftInward,distancePix(block,trial)];
+                    upperLeftInward(sbjnum) = [upperLeftInward,distancePix(block,trial)];
                 elseif flash.MotDirecMat(trial) == 1
-                    upperLeftOutward = [upperLeftOutward,distancePix(block,trial)];
+                    upperLeftOutward(sbjnum) = [upperLeftOutward,distancePix(block,trial)];
                 end
             end
 
@@ -75,6 +75,7 @@ labels = {'upperRightInward', 'upperRightOutward', 'lowerRightInward', 'lowerRig
 
 % Create a bar chart
 bar(dvamean);
+% errorbar(1:2:number_x_axis * 2,cell2mat(ave),cell2mat(ave_ste),'k.','LineWidth',1);
 set(gca, 'XTickLabel', labels);
 
 % Add titles and labels
