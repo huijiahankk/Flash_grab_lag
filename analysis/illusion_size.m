@@ -1,9 +1,7 @@
-
-
 clear all;
 addpath '../function';
 
-sbjnames = {'hjh','pilotfour'};
+sbjnames = {'hjh','pilotfour',};
 path = '../data';
 cd(path);
 
@@ -62,23 +60,26 @@ for sbjnum = 1:length(sbjnames)
         end
     end
 
-    upperRightInwardMat(sbjnum,:) = upperRightInward;
+    upperRightInwardMat(sbjnum,:) = - upperRightInward;
     upperRightOutwardMat(sbjnum,:) = upperRightOutward;
-    lowerRightInwardMat(sbjnum,:) = lowerRightInward;
+    lowerRightInwardMat(sbjnum,:) = - lowerRightInward;
     lowerRightOutwardMat(sbjnum,:) = lowerRightOutward;
-    lowerLeftInwardMat(sbjnum,:) = lowerLeftInward;
+    lowerLeftInwardMat(sbjnum,:) = - lowerLeftInward;
     lowerLeftOutwardMat(sbjnum,:) = lowerLeftOutward;
-    upperLeftInwardMat(sbjnum,:) = upperLeftInward;
+    upperLeftInwardMat(sbjnum,:) = - upperLeftInward;
     upperLeftOutwardMat(sbjnum,:) = upperLeftOutward;
 
-    upperRight(sbjnum,:) = upperRightOutwardMat(sbjnum,:)  - upperRightInwardMat(sbjnum,:) ;
-    lowerRight(sbjnum,:) = lowerRightOutwardMat(sbjnum,:)  - lowerRightInwardMat(sbjnum,:) ;
-    lowerLeft(sbjnum,:) = lowerLeftOutwardMat(sbjnum,:)  - lowerLeftInwardMat(sbjnum,:) ;
-    upperLeft(sbjnum,:) = upperLeftOutwardMat(sbjnum,:)  - upperLeftInwardMat(sbjnum,:) ;
 end
 
+left = [lowerLeftInwardMat lowerLeftOutwardMat upperLeftInwardMat upperLeftOutwardMat];
+right = [upperRightInwardMat upperRightOutwardMat lowerRightInwardMat lowerRightOutwardMat];
+upper = [upperRightInwardMat upperRightOutwardMat upperLeftInwardMat upperLeftOutwardMat];
+lower = [lowerRightInwardMat lowerRightOutwardMat lowerLeftInwardMat lowerLeftOutwardMat];
+Petal = [upperRightInwardMat lowerRightInwardMat lowerLeftInwardMat upperLeftInwardMat];
+Fugal = [upperRightOutwardMat lowerRightOutwardMat lowerLeftOutwardMat upperLeftOutwardMat];
+
 % Store all matrices in a cell array
-matrices = {upperRight, lowerRight, lowerLeft, upperLeft};
+matrices = {left, right, upper, lower, Petal, Fugal};
 
 % Calculate the mean of all elements in each matrix using cellfun
 means = cellfun(@(x) mean(x, 'all'), matrices);
@@ -90,7 +91,7 @@ dvamean = pix2dva(means, eyeScreenDistence, windowRect, screenHeight);
 dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
 
 
-labels = {'upperRight', 'lowerRight','lowerLeft', 'upperLeft'};
+labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal'};
 
 bar(dvamean);
 hold on;
@@ -104,15 +105,13 @@ ylabel('Mean distance from the flash (dva)');
 
 
 % Perform t-tests
-[h_ur, p_ur] = ttest2(upperRight(:), lowerRight(:));
-[h_lr, p_lr] = ttest2(lowerRight(:), lowerLeft(:));
-[h_ll, p_ll] = ttest2(lowerLeft(:), upperLeft(:));
-[h_ul, p_ul] = ttest2(upperLeft(:), upperRight(:));
+[h_lr, p_lr] = ttest2(left(:), right(:));
+[h_ul, p_ul] = ttest2(upper(:), lower(:));
+[h_pf, p_pf] = ttest2(Petal(:), Fugal(:));
+
 
 % Display results
 disp('t-test results:');
-disp(['UpperRight vs LowerRight: h = ', num2str(h_ur), ', p = ', num2str(p_ur)]);
-disp(['LowerRight vs LowerLeft: h = ', num2str(h_lr), ', p = ', num2str(p_lr)]);
-disp(['LowerLeft vs UpperLeft: h = ', num2str(h_ll), ', p = ', num2str(p_ll)]);
-disp(['UpperLeft vs UpperRight: h = ', num2str(h_ul), ', p = ', num2str(p_ul)]);
-
+disp(['Left vs Right: h = ', num2str(h_lr), ', p = ', num2str(p_lr)]);
+disp(['Upper vs Lower: h = ', num2str(h_ul), ', p = ', num2str(p_ul)]);
+disp(['Petal vs Fugal: h = ', num2str(h_pf), ', p = ', num2str(p_pf)]);
