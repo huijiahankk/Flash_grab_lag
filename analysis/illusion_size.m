@@ -69,6 +69,16 @@ for sbjnum = 1:length(sbjnames)
     upperLeftInwardMat(sbjnum,:) = - upperLeftInward;
     upperLeftOutwardMat(sbjnum,:) = upperLeftOutward;
 
+     % save each subjects' data into excel file
+    data = table(upperRightInwardMat(sbjnum, :)', upperRightOutwardMat(sbjnum, :)', lowerRightInwardMat(sbjnum, :)', ...
+                 lowerRightOutwardMat(sbjnum, :)', lowerLeftInwardMat(sbjnum, :)', lowerLeftOutwardMat(sbjnum, :)', ...
+                 upperLeftInwardMat(sbjnum, :)', upperLeftOutwardMat(sbjnum, :)', ...
+                 'VariableNames', {'upperRightInward', 'upperRightOutward', 'lowerRightInward', 'lowerRightOutward', ...
+                                   'lowerLeftInward', 'lowerLeftOutward', 'upperLeftInward', 'upperLeftOutward'});
+
+    filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
+%     writetable(data, filename);
+
 end
 
 left = [lowerLeftInwardMat lowerLeftOutwardMat upperLeftInwardMat upperLeftOutwardMat];
@@ -77,6 +87,7 @@ upper = [upperRightInwardMat upperRightOutwardMat upperLeftInwardMat upperLeftOu
 lower = [lowerRightInwardMat lowerRightOutwardMat lowerLeftInwardMat lowerLeftOutwardMat];
 Petal = [upperRightInwardMat lowerRightInwardMat lowerLeftInwardMat upperLeftInwardMat];
 Fugal = [upperRightOutwardMat lowerRightOutwardMat lowerLeftOutwardMat upperLeftOutwardMat];
+
 
 % Store all matrices in a cell array
 matrices = {left, right, upper, lower, Petal, Fugal};
