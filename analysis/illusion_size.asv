@@ -71,27 +71,29 @@ for sbjnum = 1:length(sbjnames)
 
 
 
-    upperRightInwardMatDva(sbjnum, :) = pix2dva(upperRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    upperRightOutwardMatDva(sbjnum, :) = pix2dva(upperRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    lowerRightInwardMatDva(sbjnum, :) = pix2dva(lowerRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    lowerRightOutwardMatDva(sbjnum, :) = pix2dva(lowerRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    lowerLeftInwardMatDva(sbjnum, :) = pix2dva(lowerLeftInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    lowerLeftOutwardMatDva(sbjnum, :) = pix2dva(lowerLeftOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    upperLeftInwardMatDva(sbjnum, :) = pix2dva(upperLeftInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    upperLeftOutwardMatDva(sbjnum, :) = pix2dva(upperLeftOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    upperRightInwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    upperRightOutwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    lowerRightInwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    lowerRightOutwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    lowerRightOutwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    lowerLeftOutwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    upperLeftInwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+    upperLeftOutwardMatDva = pix2dva(table2array(upperRightInwardMat), eyeScreenDistence, windowRect, screenHeight);
+
+
 
 
 
      % save each subjects' data into excel file
-    data = table(upperRightInwardMatDva(sbjnum, :)', upperRightOutwardMatDva(sbjnum, :)', lowerRightInwardMatDva(sbjnum, :)', ...
-                 lowerRightOutwardMatDva(sbjnum, :)', lowerLeftInwardMatDva(sbjnum, :)', lowerLeftOutwardMatDva(sbjnum, :)', ...
-                 upperLeftInwardMatDva(sbjnum, :)', upperLeftOutwardMatDva(sbjnum, :)', ...
+    data = table(upperRightInwardMat(sbjnum, :)', upperRightOutwardMat(sbjnum, :)', lowerRightInwardMat(sbjnum, :)', ...
+                 lowerRightOutwardMat(sbjnum, :)', lowerLeftInwardMat(sbjnum, :)', lowerLeftOutwardMat(sbjnum, :)', ...
+                 upperLeftInwardMat(sbjnum, :)', upperLeftOutwardMat(sbjnum, :)', ...
                  'VariableNames', {'upperRightInward', 'upperRightOutward', 'lowerRightInward', 'lowerRightOutward', ...
                                    'lowerLeftInward', 'lowerLeftOutward', 'upperLeftInward', 'upperLeftOutward'});
 
 
     filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
-    writetable(data, filename);
+%     writetable(dataDva, filename);
 
 end
 
