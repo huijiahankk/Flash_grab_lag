@@ -62,11 +62,13 @@ target.WidthDva = 0.5; % Width of the red flashed bar in visual degree angle
 target.LengthDva = 3; % Height of the red flashed bar in visual degree angle
 target.WidthPix = dva2pix(target.WidthDva,eyeScreenDistence,windowRect,screenHeight);
 target.LengthPix = dva2pix(target.LengthDva,eyeScreenDistence,windowRect,screenHeight);
+target.movDistDva = 12;  % in flash grab equals to gratingMaskRadius - centerDiskRadiusDva = 15-3=12
+target.movDistPix = dva2pix(target.movDistDva,eyeScreenDistence,windowRect,screenHeight);
+
 % flash.Angle = 135;% The angle of rotation in degrees
 target.Size = [0, 0, target.WidthPix, target.LengthPix];  % Red bar size before rotation
 target.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
-target.speed = 3; % pixel per frame
-target.lenghPix = 100;% pixel
+target.speed = 4; % pixel per frame
 % mov.PresFrame = mov.lenghPix/mov.speed; % frame
 target.MotDirec = [-1 1]; % - 1 means flash moves inward   1 mean flash moves outward
 
@@ -75,17 +77,24 @@ target.Image(:,:,2) = zeros(target.LengthPix,  target.WidthPix);
 target.Image(:,:,3) = target.Image(:,:,2);
 target.Texture = Screen('MakeTexture', window, target.Image);
 
-target.StartdistanceX = 10; % pixel
-target.StartdistanceY = 100; % pixel
+target.startdistDva = 3;
+target.startdistPix = dva2pix(target.startdistDva,eyeScreenDistence,windowRect,screenHeight); 
+
+target.StartdistanceX = target.startdistPix * cosd(85); 
+target.StartdistanceY = target.startdistPix * sind(85);
+
+target.enddistDva = 15;
+target.enddistPix = dva2pix(target.enddistDva,eyeScreenDistence,windowRect,screenHeight); 
 
 
 %----------------------------------------------------------------------
 %        flashed red bar parameters
 %----------------------------------------------------------------------
-object.loc = [1/3 2/3] * target.lenghPix; % frame
+object.locPhaseShiftdva = 1;
+object.locPhaseShiftPixTemp = dva2pix(object.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
+object.loc = [target.LengthPix/2  - object.locPhaseShiftPixTemp   target.LengthPix/2  + object.locPhaseShiftPixTemp];
+
 object.presentFrame = 3; % frame
-
-
 
 %----------------------------------------------------------------------
 %            parameters of response probe
@@ -142,11 +151,15 @@ for block = 1: blockNum
     A2 = blockNum;
     str = sprintf(formatSpec,A1,A2);
 
-    Screen ('TextSize',window,30);
-    Screen('TextFont',window,'Courier');
+
+    strResponse = 'Please adjust the probe' ;
+
+%     Screen ('TextSize',window,30);
+%     Screen('TextFont',window,'Courier');
 
     topCenterQuadRect = [xCenter/2 0  xCenter*3/2 yCenter];
-    DrawFormattedText(window, str, 'center', 'center', black,[],[],[],[],[],topCenterQuadRect);
+    CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter]; 
+    DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
     Screen('Flip', window);
     KbStrokeWait;
 
@@ -158,7 +171,7 @@ for block = 1: blockNum
 
     for trial = 1:trialNum
 
-        fprintf('Starting trial %d of %d\n', trial, trialNum);
+%         fprintf('Starting trial %d of %d\n', trial, trialNum);
         prekeyIsDown = 0;
         flashShowFlag = 0;
 
@@ -167,14 +180,12 @@ for block = 1: blockNum
         if         target.MotDirecMat(trial) == 1
             target.shift = 0;
         elseif     target.MotDirecMat(trial) == - 1
-            target.shift = yCenter - target.lenghPix/2;
+            target.shift = target.enddistPix;
         end
 
-        fprintf('mov.LocSecq = %d, mov.MotDirec = %d, probe.shiftPix = %d,flash.loc = %d\n', ...
-            target.LocSecq, target.MotDirecMat(trial),probe.shiftPixMat(trial),object.locMat(trial));
-        %         % Add jittering to flash.start  Random pixel shift less than 5
-        %         jitterAmount(block,trial) = floor(rand * 10);
 
+        % Add jittering to flash.start  Random pixel shift less than 5
+        jitterAmount(block,trial) = floor(rand * 10);
 
         if target.LocSecq == 45
             FactorX = 1;
@@ -198,7 +209,7 @@ for block = 1: blockNum
         probe.TempX = 0;
         probe.TempY = 0;
 
-        for i = 1: target.lenghPix
+        for i = 1: (target.movDistPix/target.speed) 
             flashShowFlag = 0;
             flashPresentFlag = 0;
             target.shift = target.shift + target.MotDirecMat(trial) * target.speed;
@@ -210,7 +221,7 @@ for block = 1: blockNum
             iMat(trial,i) = i;
 
 %             if   i == flash.locMat(trial)
-                if i >= object.locMat(trial) - (object.presentFrame - 1)/2 && i <= object.locMat(trial) + (object.presentFrame - 1)/2
+                if i >= object.locMat(trial) + jitterAmount(block,trial) - (object.presentFrame - 1)/2 && i <= object.locMat(trial) + jitterAmount(block,trial) + (object.presentFrame - 1)/2
 
                 object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * target.shift * sind(45);
                 object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * target.shift * cosd(45);
@@ -219,9 +230,9 @@ for block = 1: blockNum
                 object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
                 Screen('DrawTexture', window, target.Texture, [], object.Rect, target.Angle);
                 % Debug messages
-                fprintf('Flash drawn in trial %d at frame %d\n', trial, i);
-                fprintf('mov.CenterPosX: %f, mov.CenterPosY: %f\n', target.CenterPosX(block, trial), target.CenterPosY(block, trial));
-                fprintf('flash.CenterPosX: %f, flash.CenterPosY: %f\n', object.CenterPosX(block, trial), object.CenterPosY(block, trial));
+%                 fprintf('Flash drawn in trial %d at frame %d\n', trial, i);
+%                 fprintf('mov.CenterPosX: %f, mov.CenterPosY: %f\n', target.CenterPosX(block, trial), target.CenterPosY(block, trial));
+%                 fprintf('flash.CenterPosX: %f, flash.CenterPosY: %f\n', object.CenterPosX(block, trial), object.CenterPosY(block, trial));
             end
             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
@@ -280,8 +291,15 @@ for block = 1: blockNum
             end
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
+
+            Screen ('TextSize',window,30);
+            Screen('TextFont',window,'Courier');
+            DrawFormattedText(window, strResponse, 'center', 'center', grey,[],[],[],[],[],CenterQuadRect);
+
             Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,target.Angle); % flash.Rect
-            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+
+            %             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+
             Screen('Flip', window);
 
 

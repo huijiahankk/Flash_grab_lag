@@ -39,7 +39,7 @@ refreshRate = 60;
 commandwindow;
 addpath ../function/;
 
-eyeScreenDistence = 66;  %  57 cm
+eyeScreenDistence = 57;  %  57 cm
 screenHeight = 33.5; % 26.8 cm
 % Get the number of pixels in the vertical dimension of the screen
 screenHeightPixels = windowRect(4);
@@ -68,17 +68,12 @@ gratingMaskRadius = 15; % degree of visual angle
 gratingMaskRadiusPix = dva2pix(gratingMaskRadius,eyeScreenDistence,windowRect,screenHeight); % Radius of the grating
 
 % Define variables for the animation speed and the phase of the grating
-phaseSpeed = 3; % Speed of phase shift (pixel/frame)
+phaseSpeed = 4; % Speed of phase shift (pixel/frame)
 % phaseSpeedDva = pix2dva(phaseSpeed,eyeScreenDistence,windowRect,screenHeight);
 % phaseSpeedDvaPerSec = phaseSpeedDva * pi * 60;
 
 cycleWidthDva = 5;  % 5.6 in flash grab patient
 cycleWidthPix = dva2pix(cycleWidthDva,eyeScreenDistence,windowRect,screenHeight) + 1;
-% maxPhaseShiftDva = 10; % flash.CenterPix, Maximum phase shift, typically one cycle width
-flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
-flash.maxPhaseShiftdva = 1;
-flash.maxPhaseShiftPixTemp = dva2pix(flash.maxPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
-flash.maxPhaseShiftPix = [flash.maxPhaseShift - flash.maxPhaseShiftPix   flash.maxPhaseShift + flash.Tem];
 
 % maxPhaseShiftdva = pix2dva(ceil(maxPhaseShift),eyeScreenDistence,windowRect,screenHeight);
 gratDurationInSec = 1.5; % grating show duration in seconds
@@ -111,12 +106,20 @@ flash.WidthDva = 0.5; % Width of the red flashed bar in visual degree angle
 flash.LengthDva = 3; % Height of the red flashed bar in visual degree angle
 flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeight);
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
-% flash.Angle = 135;% The angle of rotation in degrees
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
 flash.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
-% flash.Quad =  repmat(flash.QuadDegree,1,trialNum/length(flash.QuadDegree));
-% flash.CenterDva = 180 * maxPhaseShiftdva; % degree of visual angle from fixation center
+
 flash.PresFrame = 3; % frame
+
+% Maximum phase shift, the grading moving length 
+flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
+gratingCenterPix = (gratingMaskRadiusPix + centerDiskRadiusPix)/2;
+% locPhaseShift means flash shift from the end of the moving onset and offset
+flash.locPhaseShiftdva = 1;
+flash.locPhaseShiftPixTemp = dva2pix(flash.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
+flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp   gratingCenterPix + flash.locPhaseShiftPixTemp];
+
+
 flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
@@ -183,7 +186,7 @@ for block = 1: blockNum
     Screen('TextFont',window,'Courier');
 
     topCenterQuadRect = [xCenter/2 0  xCenter*3/2 yCenter];
-    DrawFormattedText(window, str, 'center', 'center', black,[],[],[],[],[],topCenterQuadRect);
+    DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
     Screen('Flip', window);
     KbStrokeWait;
 
@@ -200,8 +203,8 @@ for block = 1: blockNum
         phaseSpeed = abs(phaseSpeed);
         flash.LocSecq = flash.QuadMat(trial);
 
-        % Add jittering to maxPhaseShift   Random pixel shift less than 5
-        jitterAmount(block,trial) = 0; %floor(rand * 10);  
+        % Add jittering to maxPhaseShift   Random pixel shift less than 10 pixel
+        jitterAmount(block,trial) = floor(rand * 10);  
 
         if  flash.LocSecq == 135 | flash.LocSecq == 315
             flash.Angle = 45;
@@ -248,13 +251,13 @@ for block = 1: blockNum
             dynamicGrating = (dynamicGrating * 2 - 1) * contrastFactor + grey;
 
             % Apply the circular mask: inside the grating radius, use dynamicGrating; outside, keep it grey
-            maskedGrating = ones(size(R)) * grey;  % Start with a grey mask everywhere
+            maskedGrating = ones(size(R)) * black;  % Start with a grey mask everywhere
             maskedGrating(R <= gratingMaskRadiusPix) = dynamicGrating(R <= gratingMaskRadiusPix);  % Apply updated grating inside the mask
 
             maskedGratingTexture = Screen('MakeTexture', window, maskedGrating);
             Screen('DrawTexture', window, maskedGratingTexture, [], gratingRect);
 
-            Screen('FillArc', window, grey, gratingRect,wedgeStart, wedgeCoverAngle);
+            Screen('FillArc', window, black, gratingRect,wedgeStart, wedgeCoverAngle);
             %                         phaseShiftAll(trial,i) = phaseShift;
 
             %             % Reset the phaseShift to create continuous motion
@@ -289,7 +292,7 @@ for block = 1: blockNum
             end
 
             %       Draw the grey disk and fixtion in the center of the screen
-                        Screen('FillOval', window, grey, centerDiskRect);
+            Screen('FillOval', window, black, centerDiskRect);
             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
             % define the present frame of the flash
