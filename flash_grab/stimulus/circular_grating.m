@@ -32,8 +32,8 @@ screens = Screen('Screens');
 screenNumber = max(screens);
 grey = WhiteIndex(screenNumber) / 2;
 black = BlackIndex(screenNumber) ;
-red = [255, 0, 0];
-[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 800 600]); %
+white = WhiteIndex(screenNumber) ;
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, black, [0 0 800 600]); %
 % refreshRate = FrameRate(window);
 refreshRate = 60;
 commandwindow;
@@ -68,7 +68,7 @@ gratingMaskRadius = 15; % degree of visual angle
 gratingMaskRadiusPix = dva2pix(gratingMaskRadius,eyeScreenDistence,windowRect,screenHeight); % Radius of the grating
 
 % Define variables for the animation speed and the phase of the grating
-phaseSpeed = 4; % Speed of phase shift (pixel/frame)
+phaseSpeed = 3; % Speed of phase shift (pixel/frame)
 % phaseSpeedDva = pix2dva(phaseSpeed,eyeScreenDistence,windowRect,screenHeight);
 % phaseSpeedDvaPerSec = phaseSpeedDva * pi * 60;
 
@@ -76,7 +76,9 @@ cycleWidthDva = 5;  % 5.6 in flash grab patient
 cycleWidthPix = dva2pix(cycleWidthDva,eyeScreenDistence,windowRect,screenHeight) + 1;
 % maxPhaseShiftDva = 10; % flash.CenterPix, Maximum phase shift, typically one cycle width
 flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
-flash.maxPhaseShiftPix = [flash.maxPhaseShift - 10  flash.maxPhaseShift + 10];
+flash.maxPhaseShiftdva = 1;
+flash.maxPhaseShiftPixTemp = dva2pix(flash.maxPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
+flash.maxPhaseShiftPix = [flash.maxPhaseShift - flash.maxPhaseShiftPix   flash.maxPhaseShift + flash.Tem];
 
 % maxPhaseShiftdva = pix2dva(ceil(maxPhaseShift),eyeScreenDistence,windowRect,screenHeight);
 gratDurationInSec = 1.5; % grating show duration in seconds
@@ -136,8 +138,8 @@ probe.WidthPix = dva2pix(probe.WidthDva,eyeScreenDistence,windowRect,screenHeigh
 probe.LengthPix = dva2pix(probe.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 
 % Define a rectangle
-probe.Image(:,:,1) = zeros(probe.LengthPix,  probe.WidthPix);
-probe.Image(:,:,2) = zeros(probe.LengthPix,  probe.WidthPix) * 255;
+probe.Image(:,:,1) = ones(probe.LengthPix,  probe.WidthPix);
+probe.Image(:,:,2) = ones(probe.LengthPix,  probe.WidthPix);
 probe.Image(:,:,3) = probe.Image(:,:,2);
 
 % Make the rectangle into a texure
@@ -288,7 +290,7 @@ for block = 1: blockNum
 
             %       Draw the grey disk and fixtion in the center of the screen
                         Screen('FillOval', window, grey, centerDiskRect);
-            Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
             % define the present frame of the flash
             if flashPresentFlag
@@ -343,7 +345,7 @@ for block = 1: blockNum
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
             Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,flash.Angle); % flash.Rect
-            Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
             % You can add a small pause to prevent CPU overloading
             WaitSecs(0.01);

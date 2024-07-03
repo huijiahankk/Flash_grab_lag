@@ -32,8 +32,8 @@ screens = Screen('Screens');
 screenNumber = max(screens);
 grey = WhiteIndex(screenNumber) / 2;
 black = BlackIndex(screenNumber) ;
-red = [255, 0, 0];
-[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, []); %
+white = WhiteIndex(screenNumber) ;
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, black, [0 0 800 600]); %
 xCenter = windowRect(3) / 2; % Center X-coordinate
 yCenter = windowRect(4) / 2; % Center Y-coordinate
 refreshRate = FrameRate(window);
@@ -58,32 +58,32 @@ LineWithPix = 6;
 %----------------------------------------------------------------------
 %         moving bar parameters
 %----------------------------------------------------------------------
-mov.WidthDva = 0.5; % Width of the red flashed bar in visual degree angle
-mov.LengthDva = 3; % Height of the red flashed bar in visual degree angle
-mov.WidthPix = dva2pix(mov.WidthDva,eyeScreenDistence,windowRect,screenHeight);
-mov.LengthPix = dva2pix(mov.LengthDva,eyeScreenDistence,windowRect,screenHeight);
+target.WidthDva = 0.5; % Width of the red flashed bar in visual degree angle
+target.LengthDva = 3; % Height of the red flashed bar in visual degree angle
+target.WidthPix = dva2pix(target.WidthDva,eyeScreenDistence,windowRect,screenHeight);
+target.LengthPix = dva2pix(target.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 % flash.Angle = 135;% The angle of rotation in degrees
-mov.Size = [0, 0, mov.WidthPix, mov.LengthPix];  % Red bar size before rotation
-mov.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
-mov.speed = 3; % pixel per frame
-mov.lenghPix = 100;% pixel
+target.Size = [0, 0, target.WidthPix, target.LengthPix];  % Red bar size before rotation
+target.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
+target.speed = 3; % pixel per frame
+target.lenghPix = 100;% pixel
 % mov.PresFrame = mov.lenghPix/mov.speed; % frame
-mov.MotDirec = [-1 1]; % - 1 means flash moves inward   1 mean flash moves outward
+target.MotDirec = [-1 1]; % - 1 means flash moves inward   1 mean flash moves outward
 
-mov.Image(:,:,1) = ones(mov.LengthPix,  mov.WidthPix);
-mov.Image(:,:,2) = zeros(mov.LengthPix,  mov.WidthPix);
-mov.Image(:,:,3) = mov.Image(:,:,2);
-mov.Texture = Screen('MakeTexture', window, mov.Image);
+target.Image(:,:,1) = ones(target.LengthPix,  target.WidthPix);
+target.Image(:,:,2) = zeros(target.LengthPix,  target.WidthPix);
+target.Image(:,:,3) = target.Image(:,:,2);
+target.Texture = Screen('MakeTexture', window, target.Image);
 
-mov.StartdistanceX = 10; % pixel
-mov.StartdistanceY = 100; % pixel
+target.StartdistanceX = 10; % pixel
+target.StartdistanceY = 100; % pixel
 
 
 %----------------------------------------------------------------------
 %        flashed red bar parameters
 %----------------------------------------------------------------------
-flash.loc = [1/3 2/3] * mov.lenghPix; % frame
-flash.presentFrame = 3; % frame
+object.loc = [1/3 2/3] * target.lenghPix; % frame
+object.presentFrame = 3; % frame
 
 
 
@@ -101,21 +101,21 @@ probe.WidthPix = dva2pix(probe.WidthDva,eyeScreenDistence,windowRect,screenHeigh
 probe.LengthPix = dva2pix(probe.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 
 % Define a rectangle
-probe.Image(:,:,1) = zeros(probe.LengthPix,  probe.WidthPix);
-probe.Image(:,:,2) = zeros(probe.LengthPix,  probe.WidthPix) * 255;
+probe.Image(:,:,1) = ones(probe.LengthPix,  probe.WidthPix);
+probe.Image(:,:,2) = ones(probe.LengthPix,  probe.WidthPix);
 probe.Image(:,:,3) = probe.Image(:,:,2);
 
 % Make the rectangle into a texure
 probe.Texture = Screen('MakeTexture', window, probe.Image);
 % probe.Rect = Screen('Rect',probe.Texture);
-probe.Size = mov.Size;
+probe.Size = target.Size;
 probe.intervalTime = 1;
 
 %----------------------------------------------------------------------
 %        Define all possible combinations of parameters
 %----------------------------------------------------------------------
 % Create all possible combinations
-combinations = combvec(mov.QuadDegree, mov.MotDirec, probe.shiftPix,flash.loc)';
+combinations = combvec(target.QuadDegree, target.MotDirec, probe.shiftPix,object.loc)';
 numCombinations = size(combinations, 1);
 
 % Number of repetitions to ensure at least 40 trials for each combination
@@ -128,10 +128,10 @@ combinationsRepeated = repmat(combinations, numRepetitions, 1);
 shuffledCombinations = combinationsRepeated(randperm(size(combinationsRepeated, 1)), :);
 
 % Assign the combinations to the parameters for the current block
-mov.QuadMat = shuffledCombinations(:, 1)';
-mov.MotDirecMat = shuffledCombinations(:, 2)';
+target.QuadMat = shuffledCombinations(:, 1)';
+target.MotDirecMat = shuffledCombinations(:, 2)';
 probe.shiftPixMat  = shuffledCombinations(:, 3)';
-flash.locMat = shuffledCombinations(:, 4)';
+object.locMat = shuffledCombinations(:, 4)';
 
 for block = 1: blockNum
     %----------------------------------------------------------------------
@@ -162,72 +162,72 @@ for block = 1: blockNum
         prekeyIsDown = 0;
         flashShowFlag = 0;
 
-        mov.LocSecq = mov.QuadMat(trial);
+        target.LocSecq = target.QuadMat(trial);
         % - 1 means flash moves inward   1 mean flash moves outward
-        if         mov.MotDirecMat(trial) == 1
-            mov.shift = 0;
-        elseif     mov.MotDirecMat(trial) == - 1
-            mov.shift = yCenter - mov.lenghPix/2;
+        if         target.MotDirecMat(trial) == 1
+            target.shift = 0;
+        elseif     target.MotDirecMat(trial) == - 1
+            target.shift = yCenter - target.lenghPix/2;
         end
 
         fprintf('mov.LocSecq = %d, mov.MotDirec = %d, probe.shiftPix = %d,flash.loc = %d\n', ...
-            mov.LocSecq, mov.MotDirecMat(trial),probe.shiftPixMat(trial),flash.locMat(trial));
+            target.LocSecq, target.MotDirecMat(trial),probe.shiftPixMat(trial),object.locMat(trial));
         %         % Add jittering to flash.start  Random pixel shift less than 5
         %         jitterAmount(block,trial) = floor(rand * 10);
 
 
-        if mov.LocSecq == 45
+        if target.LocSecq == 45
             FactorX = 1;
             FactorY = -1;
-            mov.Angle = 135;
-        elseif mov.LocSecq == 135
+            target.Angle = 135;
+        elseif target.LocSecq == 135
             FactorX = 1;
             FactorY = 1;
-            mov.Angle = 45;
-        elseif mov.LocSecq == 225
+            target.Angle = 45;
+        elseif target.LocSecq == 225
             FactorX = -1;
             FactorY = 1;
-            mov.Angle = 135;
-        elseif mov.LocSecq == 315
+            target.Angle = 135;
+        elseif target.LocSecq == 315
             FactorX = -1;
             FactorY = -1;
-            mov.Angle = 45;
+            target.Angle = 45;
         end
 
 
         probe.TempX = 0;
         probe.TempY = 0;
 
-        for i = 1: mov.lenghPix
+        for i = 1: target.lenghPix
             flashShowFlag = 0;
             flashPresentFlag = 0;
-            mov.shift = mov.shift + mov.MotDirecMat(trial) * mov.speed;
-            mov.CenterPosX(block,trial) = xCenter + FactorX * mov.StartdistanceX + FactorX * mov.shift * sind(45);
-            mov.CenterPosY(block,trial) = yCenter + FactorY * mov.StartdistanceY + FactorY * mov.shift * cosd(45);
-            mov.Rect = CenterRectOnPointd(mov.Size, mov.CenterPosX(block,trial), mov.CenterPosY(block,trial) );
-            Screen('DrawTexture', window, mov.Texture, [], mov.Rect, mov.Angle);
-            mov.shiftMat(trial) = mov.shift;
+            target.shift = target.shift + target.MotDirecMat(trial) * target.speed;
+            target.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
+            target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
+            target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX(block,trial), target.CenterPosY(block,trial) );
+            Screen('DrawTexture', window, target.Texture, [], target.Rect, target.Angle);
+            target.shiftMat(trial) = target.shift;
             iMat(trial,i) = i;
 
 %             if   i == flash.locMat(trial)
-                if i >= flash.locMat(trial) - (flash.presentFrame - 1)/2 && i <= flash.locMat(trial) + (flash.presentFrame - 1)/2
+                if i >= object.locMat(trial) - (object.presentFrame - 1)/2 && i <= object.locMat(trial) + (object.presentFrame - 1)/2
 
-                flash.CenterPosX(block,trial) = xCenter + FactorX * mov.StartdistanceY + FactorX * mov.shift * sind(45);
-                flash.CenterPosY(block,trial) = yCenter + FactorY * mov.StartdistanceX + FactorY * mov.shift * cosd(45);
-                mov.locWhenFlashX(block,trial) = mov.CenterPosX(block,trial);
-                mov.locWhenFlashY(block,trial) = mov.CenterPosY(block,trial);
-                flash.Rect = CenterRectOnPointd(mov.Size, flash.CenterPosX(block,trial), flash.CenterPosY(block,trial) );
-                Screen('DrawTexture', window, mov.Texture, [], flash.Rect, mov.Angle);
+                object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * target.shift * sind(45);
+                object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * target.shift * cosd(45);
+                target.locWhenFlashX(block,trial) = target.CenterPosX(block,trial);
+                target.locWhenFlashY(block,trial) = target.CenterPosY(block,trial);
+                object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
+                Screen('DrawTexture', window, target.Texture, [], object.Rect, target.Angle);
                 % Debug messages
                 fprintf('Flash drawn in trial %d at frame %d\n', trial, i);
-                fprintf('mov.CenterPosX: %f, mov.CenterPosY: %f\n', mov.CenterPosX(block, trial), mov.CenterPosY(block, trial));
-                fprintf('flash.CenterPosX: %f, flash.CenterPosY: %f\n', flash.CenterPosX(block, trial), flash.CenterPosY(block, trial));
+                fprintf('mov.CenterPosX: %f, mov.CenterPosY: %f\n', target.CenterPosX(block, trial), target.CenterPosY(block, trial));
+                fprintf('flash.CenterPosX: %f, flash.CenterPosY: %f\n', object.CenterPosX(block, trial), object.CenterPosY(block, trial));
             end
-            Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
         end
 
-        Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
+        Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
         Screen('Flip', window);
         WaitSecs(probe.intervalTime);
         % -------------------------------------------------------
@@ -238,8 +238,8 @@ for block = 1: blockNum
 %         probe.CenterPosY(block,trial) = flash.CenterPosY(block,trial) + FactorY * probe.shiftPixMat(trial) * cosd(45);
 
         % probe around the moving bar when flashed location
-        probe.CenterPosX(block,trial) = mov.locWhenFlashX(block,trial) + FactorX * probe.shiftPixMat(trial) * sind(45);
-        probe.CenterPosY(block,trial) =  mov.locWhenFlashY(block,trial) + FactorY * probe.shiftPixMat(trial) * cosd(45);
+        probe.CenterPosX(block,trial) = target.locWhenFlashX(block,trial) + FactorX * probe.shiftPixMat(trial) * sind(45);
+        probe.CenterPosY(block,trial) =  target.locWhenFlashY(block,trial) + FactorY * probe.shiftPixMat(trial) * cosd(45);
 
         % Find all keyboards (returns a device index for each keyboard)
         [keyboardIndices, productNames, allInfos] = GetKeyboardIndices;
@@ -256,18 +256,18 @@ for block = 1: blockNum
                         sca;
                         return;
                     elseif keyCode(KbName('LeftArrow'))
-                        if  mov.LocSecq == 135 || mov.LocSecq == 315
+                        if  target.LocSecq == 135 || target.LocSecq == 315
                             probe.TempX = probe.TempX - probe.MoveStep;
                             probe.TempY = probe.TempY - probe.MoveStep;
-                        else  mov.LocSecq == 45 | mov.LocSecq == 225;
+                        else  target.LocSecq == 45 | target.LocSecq == 225;
                             probe.TempX = probe.TempX - probe.MoveStep;
                             probe.TempY = probe.TempY + probe.MoveStep;
                         end
                     elseif keyCode(KbName('RightArrow'))
-                        if  mov.LocSecq == 135 || mov.LocSecq == 315
+                        if  target.LocSecq == 135 || target.LocSecq == 315
                             probe.TempX = probe.TempX + probe.MoveStep;
                             probe.TempY = probe.TempY + probe.MoveStep;
-                        else  mov.LocSecq == 45 | mov.LocSecq == 225
+                        else  target.LocSecq == 45 | target.LocSecq == 225
                             probe.TempX = probe.TempX + probe.MoveStep;
                             probe.TempY = probe.TempY - probe.MoveStep;
                         end
@@ -280,8 +280,8 @@ for block = 1: blockNum
             end
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
-            Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,mov.Angle); % flash.Rect
-            Screen('DrawLines', window, allCoords, LineWithPix, black, [xCenter,yCenter]);
+            Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,target.Angle); % flash.Rect
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
 
 
