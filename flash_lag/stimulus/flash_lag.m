@@ -142,6 +142,24 @@ target.MotDirecMat = shuffledCombinations(:, 2)';
 probe.shiftPixMat  = shuffledCombinations(:, 3)';
 object.locMat = shuffledCombinations(:, 4)';
 
+%----------------------------------------------------------------------
+%      Experiment introduction
+%----------------------------------------------------------------------
+
+% topCenterQuadRect = [xCenter/2 0  xCenter*3/2 yCenter];
+% % CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter];
+% tr_intro = ['You will be shown a series of trials with moving gratings. \n' ...
+%     'At some point in the gratings motion, an object will be flashed momentarily. \n' ...
+%     'During each trial, you must keep your eyes fixated on the cross in the middle of the display. \n' ...
+%     'Do not move your eyes from this fixation point during the trial. \n' ...
+%     'I will be monitoring your gaze to make sure your eyes are fixated. \n' ...
+%     'After each trial, a reference object will appear. \n' ...
+%     'Using the left and right arrow keys, you will then move the reference object to where the flashed object appeared. \n' ...
+%     'Press the spacebar to move onto the next trial.'];
+% DrawFormattedText(window, str_intro, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
+% Screen('Flip', window);
+% KbStrokeWait;
+
 for block = 1: blockNum
     %----------------------------------------------------------------------
     %       present a start screen and wait for a key-press
@@ -244,10 +262,6 @@ for block = 1: blockNum
         % -------------------------------------------------------
         %             Draw  response picture
         % --------------------------------------------------------
-%         % probe at the flashed bar location
-%         probe.CenterPosX(block,trial) = flash.CenterPosX(block,trial) + FactorX * probe.shiftPixMat(trial) * sind(45);
-%         probe.CenterPosY(block,trial) = flash.CenterPosY(block,trial) + FactorY * probe.shiftPixMat(trial) * cosd(45);
-
         % probe around the moving bar when flashed location
         probe.CenterPosX(block,trial) = target.locWhenFlashX(block,trial) + FactorX * probe.shiftPixMat(trial) * sind(45);
         probe.CenterPosY(block,trial) =  target.locWhenFlashY(block,trial) + FactorY * probe.shiftPixMat(trial) * cosd(45);

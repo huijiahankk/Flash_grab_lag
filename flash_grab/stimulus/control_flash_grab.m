@@ -1,6 +1,8 @@
 
 % For flash grab illusion test.It's a concentric grating.
-% Testting the Flash grab illusion size in 4 quadrant
+% Testting the Flash grab illusion size in 4 quadrant * 2 flash location *
+% 2 probe location * 2 motion direction  so totally
+
 
 
 clear all;close all;
@@ -8,8 +10,8 @@ clear all;close all;
 if 1
     sbjname = 'hjh';
     isEyelink = 0;
-    blockNum= 4;
-    trialNum = 32;
+    blockNum= 1;
+    trialNum = 48; % 32 48
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
     dlg_title = 'Set experiment parameters ';
@@ -111,7 +113,7 @@ flash.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225
 
 flash.PresFrame = 3; % frame
 
-% Maximum phase shift, the grading moving length 
+% Maximum phase shift, the grading moving length
 flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
 gratingCenterPix = (gratingMaskRadiusPix + centerDiskRadiusPix)/2;
 % locPhaseShift means flash shift from the end of the moving onset and offset
@@ -120,7 +122,7 @@ flash.locPhaseShiftPixTemp = dva2pix(flash.locPhaseShiftdva,eyeScreenDistence,wi
 flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp   gratingCenterPix + flash.locPhaseShiftPixTemp];
 
 
-flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [-1 0 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -128,7 +130,7 @@ flash.Image(:,:,3) = flash.Image(:,:,2);
 flash.Texture = Screen('MakeTexture', window, flash.Image);
 
 %----------------------------------------------------------------------
-%            parameters of black line
+%            parameters of probe line
 %----------------------------------------------------------------------
 probe.shiftDva = [-1 1];
 probe.shiftPix = dva2pix(probe.shiftDva,eyeScreenDistence,windowRect,screenHeight);
@@ -205,8 +207,8 @@ for block = 1: blockNum
         phaseSpeed = abs(phaseSpeed);
         flash.LocSecq = flash.QuadMat(trial);
 
-        % Add jittering to maxPhaseShift   Random pixel shift less than 10 pixel
-        jitterAmount(block,trial) = floor(rand * 10);  
+        % Add jittering to maxPhaseShift   Random pixel shift between -5 and 5 pixel
+        jitterAmount(block,trial) = 0;   %floor(rand * 10) - 5;
 
         if  flash.LocSecq == 135 | flash.LocSecq == 315
             flash.Angle = 45;
@@ -234,19 +236,99 @@ for block = 1: blockNum
         end
 
 
-
         probe.TempX = 0;
         probe.TempY = 0;
 
+        if flash.MotDirecMat(trial) ~= 0
 
-        for i = 1:gratDuraFrame
+            for i = 1:gratDuraFrame
 
-            flashPresentFlag = 0;
-            % Update R directly using speed  if phaseShift is increasing,
-            % the grating moving inward, phaseShift decreasing, grating
-            % moving outward
-            phaseShift = phaseShift + flash.MotDirecMat(trial) * phaseSpeed;
+                flashPresentFlag = 0;
+                % No motion condition, keep phaseShift constant
 
+                % Update phaseShift based on motion direction
+                phaseShift = phaseShift + flash.MotDirecMat(trial) * phaseSpeed;
+
+                % Update R directly using speed  if phaseShift is increasing,
+                % the grating moving inward, phaseShift decreasing, grating
+                % moving outward
+
+                % Generate the dynamic concentric square-wave grating
+                dynamicR = R + phaseShift; % Apply the phase shift
+                dynamicGrating = double(mod(dynamicR, cycleWidthPix * 2) < cycleWidthPix);
+                dynamicGrating = (dynamicGrating * 2 - 1) * contrastFactor + grey;
+
+                % Apply the circular mask: inside the grating radius, use dynamicGrating; outside, keep it grey
+                maskedGrating = ones(size(R)) * black;  % Start with a grey mask everywhere
+                maskedGrating(R <= gratingMaskRadiusPix) = dynamicGrating(R <= gratingMaskRadiusPix);  % Apply updated grating inside the mask
+
+                maskedGratingTexture = Screen('MakeTexture', window, maskedGrating);
+                Screen('DrawTexture', window, maskedGratingTexture, [], gratingRect);
+
+                Screen('FillArc', window, black, gratingRect,wedgeStart, wedgeCoverAngle);
+
+                %             % Reset the phaseShift to create continuous motion
+                if phaseShift >= flash.maxPhaseShiftMat(trial) + jitterAmount | phaseShift <= - flash.maxPhaseShiftMat(trial) -  jitterAmount(block,trial)
+                    phaseSpeed = -phaseSpeed; % Reverse the direction of motion
+                    phaseShiftCheck(trial) = phaseShift;
+                end
+
+                phaseShiftFrame(trial,i) = phaseShift;
+
+                % Check if the phaseShift is greater than maxPhaseShift and the direction has changed to inward
+                %  - 1 means motion outward   1 mean inward
+                if flash.MotDirecMat(trial) == 1  &&  phaseShift >= (flash.maxPhaseShiftMat(trial) + jitterAmount(block,trial))
+
+                    % Draw the rotated red bar only when the direction changes to inward
+
+                    flash.CenterPosX(block,trial) = xCenter + phaseshiftFactorX * (4 * cycleWidthPix - phaseShift)  * sind(45);
+                    flash.CenterPosY(block,trial) = yCenter + phaseshiftFactorY * (4 * cycleWidthPix - phaseShift)  * cosd(45);
+                    flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial), flash.CenterPosY(block,trial) );
+                    Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
+                    phaseShiftMat(block,trial) = phaseShift;
+                    flashFrame(block,trial) = i;
+                    flashPresentFlag = 1; % Set flag to indicate the flash was presented
+
+                elseif  flash.MotDirecMat(trial) == -1  &&   phaseShift <= (- flash.maxPhaseShiftMat(trial) -  jitterAmount(block,trial) )
+                    % Draw the rotated red bar only when the direction changes to inward
+                    flash.CenterPosX(block,trial) = xCenter + phaseshiftFactorX * abs(phaseShift)  * sind(45);
+                    flash.CenterPosY(block,trial) = yCenter + phaseshiftFactorY * abs(phaseShift)  * cosd(45);
+                    flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
+                    Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
+                    phaseShiftMat(block,trial) = phaseShift;
+                    flashFrame(block,trial) = i;
+                    flashPresentFlag = 1; % Set flag to indicate the flash was presented
+                elseif  flash.MotDirecMat(trial) == 0  &&  i == flashFrame  && flash.maxPhaseShiftMat(trial) == 182 % when meet the phaseShift requirements, the value of i
+
+                    % Draw the rotated red bar only when the direction changes to inward
+                    flash.CenterPosX(block,trial) = xCenter + phaseshiftFactorX * abs(phaseShift)  * sind(45);
+                    flash.CenterPosY(block,trial) = yCenter + phaseshiftFactorY * abs(phaseShift)  * cosd(45);
+                    flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
+                    Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
+                    %                 phaseShiftMat(trial) = phaseShift;
+                    flashFrame(block,trial) = i;
+                    flashPresentFlag = 1; % Set flag to indicate the flash was presented
+
+                end
+
+                %       Draw the grey disk and fixtion in the center of the screen
+                            Screen('FillOval', window, black, centerDiskRect);
+                Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+                Screen('Flip', window);
+                % define the present frame of the flash
+                if flashPresentFlag
+                    WaitSecs((1/refreshRate) * flash.PresFrame);
+                end
+
+            end
+
+        elseif flash.MotDirecMat(trial) == 0
+
+            if flash.maxPhaseShiftMat(trial) == 146
+                phaseShift = - 148;
+            elseif flash.maxPhaseShiftMat(trial) == 182
+                phaseShift = - 184;
+            end
             % Generate the dynamic concentric square-wave grating
             dynamicR = R + phaseShift; % Apply the phase shift
             dynamicGrating = double(mod(dynamicR, cycleWidthPix * 2) < cycleWidthPix);
@@ -260,38 +342,14 @@ for block = 1: blockNum
             Screen('DrawTexture', window, maskedGratingTexture, [], gratingRect);
 
             Screen('FillArc', window, black, gratingRect,wedgeStart, wedgeCoverAngle);
-            %                         phaseShiftAll(trial,i) = phaseShift;
-
-            %             % Reset the phaseShift to create continuous motion
-            if phaseShift >= flash.maxPhaseShiftMat(trial) + jitterAmount | phaseShift <= - flash.maxPhaseShiftMat(trial) -  jitterAmount(block,trial) 
-                phaseSpeed = -phaseSpeed; % Reverse the direction of motion
-                phaseShiftCheck(trial) = phaseShift;
-            end
-
-            phaseShiftFrame(trial,i) = phaseShift;
-
-            % Check if the phaseShift is greater than maxPhaseShift and the direction has changed to inward
-            %  - 1 means motion outward   1 mean inward 
-            if flash.MotDirecMat(trial) == 1  &&  phaseShift >= (flash.maxPhaseShiftMat(trial) + jitterAmount(block,trial))
-
-                % Draw the rotated red bar only when the direction changes to inward
-
-                flash.CenterPosX(block,trial) = xCenter + phaseshiftFactorX * (4 * cycleWidthPix - phaseShift)  * sind(45);
-                flash.CenterPosY(block,trial) = yCenter + phaseshiftFactorY * (4 * cycleWidthPix - phaseShift)  * cosd(45);
-                flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial), flash.CenterPosY(block,trial) );
-                Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
-                phaseShiftMat(trial) = phaseShift;
-                flashPresentFlag = 1; % Set flag to indicate the flash was presented
-
-            elseif  flash.MotDirecMat(trial) == -1  &&   phaseShift <= (- flash.maxPhaseShiftMat(trial) -  jitterAmount(block,trial) )
-                % Draw the rotated red bar only when the direction changes to inward
-                flash.CenterPosX(block,trial) = xCenter + phaseshiftFactorX * abs(phaseShift)  * sind(45);
-                flash.CenterPosY(block,trial) = yCenter + phaseshiftFactorY * abs(phaseShift)  * cosd(45);
-                flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
-                Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
-                phaseShiftMat(trial) = phaseShift;
-                flashPresentFlag = 1; % Set flag to indicate the flash was presented
-            end
+            % Draw the rotated red bar only when the direction changes to inward
+            flash.CenterPosX(block,trial) = xCenter + phaseshiftFactorX * abs(phaseShift)  * sind(45);
+            flash.CenterPosY(block,trial) = yCenter + phaseshiftFactorY * abs(phaseShift)  * cosd(45);
+            flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
+            Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
+            phaseShiftMat(trial) = phaseShift;
+            flashFrame(block,trial) = i;
+            flashPresentFlag = 1; % Set flag to indicate the flash was presented
 
             %       Draw the grey disk and fixtion in the center of the screen
             Screen('FillOval', window, black, centerDiskRect);
@@ -302,7 +360,14 @@ for block = 1: blockNum
                 WaitSecs((1/refreshRate) * flash.PresFrame);
             end
 
+            %       Draw the grey disk and fixtion in the center of the screen
+            %             Screen('FillOval', window, black, centerDiskRect);
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+            Screen('Flip', window);
+            WaitSecs(0.5);
+
         end
+
 
         % -------------------------------------------------------
         %             Draw  response picture
