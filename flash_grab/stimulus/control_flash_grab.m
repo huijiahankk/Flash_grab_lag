@@ -1,14 +1,17 @@
 
 % For flash grab illusion test.It's a concentric grating.
 % Testting the Flash grab illusion size in 4 quadrant * 2 flash location *
-% 2 probe location * 2 motion direction  so totally
-
+% 2 probe location * 3 motion direction  so totally
+% line 112 flash.QuadDegree = [45 135 225 315]; 
+% line 122 flash.maxPhaseShiftPix
+% flash.MotDirec = [-1 0 1];
+% probe.shiftDva = [-1 1];
 
 
 clear all;close all;
 
 if 1
-    sbjname = 'hjh';
+    sbjname = 'hjh_no_motion';
     isEyelink = 0;
     blockNum= 1;
     trialNum = 48; % 32 48
@@ -54,6 +57,7 @@ yCoords = [0 0 -fixCrossDimPix fixCrossDimPix];
 allCoords = [xCoords; yCoords];
 LineWithPix = 6;
 phaseShiftMat = [];
+FixationOnBeforeStiSec = 0.5;
 
 %----------------------------------------------------------------------
 %         Grating parameters
@@ -201,7 +205,10 @@ for block = 1: blockNum
 
 
     for trial = 1:trialNum
-
+        
+        Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+        Screen('Flip', window);
+        WaitSecs(FixationOnBeforeStiSec);
         phaseShift = 0; %flash.MotDirecMat(trial) * (maxPhaseShift); % Initial phase shift (frame)
         prekeyIsDown = 0;
         phaseSpeed = abs(phaseSpeed);
@@ -221,18 +228,22 @@ for block = 1: blockNum
             wedgeStart = wedgeStartMat(1);
             phaseshiftFactorX = 1;
             phaseshiftFactorY = -1;
+            target.Angle = 135;
         elseif flash.LocSecq == 135
             wedgeStart = wedgeStartMat(2);
             phaseshiftFactorX = 1;
             phaseshiftFactorY = 1;
+            target.Angle = 45;
         elseif flash.LocSecq == 225
             wedgeStart = wedgeStartMat(3);
             phaseshiftFactorX = -1;
             phaseshiftFactorY = 1;
+            target.Angle = 135;
         elseif flash.LocSecq == 315
             wedgeStart = wedgeStartMat(4);
             phaseshiftFactorX = -1;
             phaseshiftFactorY = -1;
+            target.Angle = 45;
         end
 
 
@@ -360,9 +371,10 @@ for block = 1: blockNum
                 WaitSecs((1/refreshRate) * flash.PresFrame);
             end
 
-            %       Draw the grey disk and fixtion in the center of the screen
-            %             Screen('FillOval', window, black, centerDiskRect);
+            %             %       Draw the grey disk and fixtion in the center of the screen
+            Screen('FillOval', window, black, centerDiskRect);
             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+
             Screen('Flip', window);
             WaitSecs(0.5);
 
@@ -415,7 +427,16 @@ for block = 1: blockNum
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
             Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,flash.Angle); % flash.Rect
-            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+            %             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
+            strResponse = 'Please adjust the probe' ;
+            Screen ('TextSize',window,30);
+            Screen('TextFont',window,'Courier');
+            CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter];
+            DrawFormattedText(window, strResponse, 'center', 'center', grey,[],[],[],[],[],CenterQuadRect);
+
+            Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,target.Angle); % flash.Rect
+
+
             Screen('Flip', window);
             % You can add a small pause to prevent CPU overloading
             WaitSecs(0.01);
@@ -429,7 +450,7 @@ end
 %                      save parameters files
 %----------------------------------------------------------------------
 
-savePath = '../data/flash_grab';
+savePath = '../data/';
 time = clock;
 
 filename = sprintf('%s_%02g_%02g_%02g_%02g_%02g',sbjname,time(1),time(2),time(3),time(4),time(5));

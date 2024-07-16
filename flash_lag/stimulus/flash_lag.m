@@ -169,12 +169,6 @@ for block = 1: blockNum
     A2 = blockNum;
     str = sprintf(formatSpec,A1,A2);
 
-
-    strResponse = 'Please adjust the probe' ;
-
-%     Screen ('TextSize',window,30);
-%     Screen('TextFont',window,'Courier');
-
     topCenterQuadRect = [xCenter/2 0  xCenter*3/2 yCenter];
     CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter]; 
     DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
@@ -306,6 +300,7 @@ for block = 1: blockNum
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
 
+            strResponse = 'Please adjust the probe' ;
             Screen ('TextSize',window,30);
             Screen('TextFont',window,'Courier');
             DrawFormattedText(window, strResponse, 'center', 'center', grey,[],[],[],[],[],CenterQuadRect);
