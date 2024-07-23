@@ -147,8 +147,8 @@ probe.WidthPix = dva2pix(probe.WidthDva,eyeScreenDistence,windowRect,screenHeigh
 probe.LengthPix = dva2pix(probe.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 
 % Define a rectangle
-probe.Image(:,:,1) = ones(probe.LengthPix,  probe.WidthPix);
-probe.Image(:,:,2) = ones(probe.LengthPix,  probe.WidthPix);
+probe.Image(:,:,1) = ones(probe.LengthPix,  probe.WidthPix);  % set the probe color red 
+probe.Image(:,:,2) = zeros(probe.LengthPix,  probe.WidthPix);
 probe.Image(:,:,3) = probe.Image(:,:,2);
 
 % Make the rectangle into a texure
@@ -438,7 +438,7 @@ for block = 1: blockNum
 
 
             Screen('Flip', window);
-            % You can add a small pause to prevent CPU overloading
+            % add a small pause to prevent CPU overloading
             WaitSecs(0.01);
         end
         probe.PosXMat(block,trial) = probe.CenterPosX(block,trial)  + probe.TempX;
