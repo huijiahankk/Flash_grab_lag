@@ -104,7 +104,7 @@ object.Image(:,:,2) = ones(target.LengthPix,  target.WidthPix);
 object.Image(:,:,3) = object.Image(:,:,1);
 object.Texture = Screen('MakeTexture', window, object.Image);
 
-object.presentFrame = 60; % frame
+object.presentFrame = 3; % frame
 
 %----------------------------------------------------------------------
 %            parameters of response probe
