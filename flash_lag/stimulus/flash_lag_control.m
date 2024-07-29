@@ -46,7 +46,7 @@ commandwindow;
 addpath ../function/;
 
 eyeScreenDistence = 57;  %  57 cm
-screenHeight = 33.5; % 26.8 cm
+screenHeight = 30.5; % 26.8 cm  33.5
 % Get the number of pixels in the vertical dimension of the screen
 screenHeightPixels = windowRect(4);
 
@@ -97,14 +97,14 @@ target.enddistPix = dva2pix(target.enddistDva,eyeScreenDistence,windowRect,scree
 object.locPhaseShiftdva = 1;
 object.locPhaseShiftPixTemp = dva2pix(object.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
 % object.loc = floor([target.movDistPix/2  - object.locPhaseShiftPixTemp   target.movDistPix/2  + object.locPhaseShiftPixTemp]);
-object.locPix = [148 212];
+object.locPix = [160 236];  % 160 196 200 236  same with phaseShift = 160;  when flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
 
 object.Image(:,:,1) = zeros(target.LengthPix,  target.WidthPix); % set object green
 object.Image(:,:,2) = ones(target.LengthPix,  target.WidthPix);
 object.Image(:,:,3) = object.Image(:,:,1);
 object.Texture = Screen('MakeTexture', window, object.Image);
 
-object.presentFrame = 3; % frame
+object.presentFrame = 60; % frame
 
 %----------------------------------------------------------------------
 %            parameters of response probe

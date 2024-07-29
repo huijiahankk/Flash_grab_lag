@@ -45,13 +45,13 @@ grey = WhiteIndex(screenNumber) / 2;
 black = BlackIndex(screenNumber) ;
 white = WhiteIndex(screenNumber) ;
 [window, windowRect] = PsychImaging('OpenWindow', screenNumber, black, [0 0 800 600]); %
-refreshRate = FrameRate(window);
-% refreshRate = 60;
+% refreshRate = FrameRate(window);
+refreshRate = 60;
 commandwindow;
 addpath ../function/;
 
 eyeScreenDistence = 57;  %  57 cm
-screenHeight = 30.5; % 26.8 cm   33.5 cm
+screenHeight = 33.5; % 26.8 cm
 % Get the number of pixels in the vertical dimension of the screen
 screenHeightPixels = windowRect(4);
 
@@ -124,7 +124,7 @@ flash.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225
 flash.PresFrame = 3; % frame
 
 % Maximum phase shift, the grading moving length
-% flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
+flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
 gratingCenterPix = (gratingMaskRadiusPix + centerDiskRadiusPix)/2;
 % locPhaseShift means flash shift from the end of the moving onset and offset
 flash.locPhaseShiftdva = 1;
@@ -364,10 +364,10 @@ for block = 1: blockNum
 
         elseif flash.MotDirecMat(trial) == 0
 
-            if flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
-                phaseShift = -160;
-            elseif flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(2)
-                phaseShift = -236;
+            if flash.maxPhaseShiftMat(trial) == 146
+                phaseShift = - 148;
+            elseif flash.maxPhaseShiftMat(trial) == 182
+                phaseShift = - 184;
             end
             % Generate the dynamic concentric square-wave grating
             dynamicR = R + phaseShift; % Apply the phase shift

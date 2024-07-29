@@ -132,7 +132,7 @@ flash.locPhaseShiftPixTemp = dva2pix(flash.locPhaseShiftdva,eyeScreenDistence,wi
 flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp   gratingCenterPix + flash.locPhaseShiftPixTemp];
 
 
-flash.MotDirec = [-1 0 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [0 0 0]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -365,9 +365,9 @@ for block = 1: blockNum
         elseif flash.MotDirecMat(trial) == 0
 
             if flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
-                phaseShift = -160;
+                phaseShift = 160;
             elseif flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(2)
-                phaseShift = -236;
+                phaseShift = 236;
             end
             % Generate the dynamic concentric square-wave grating
             dynamicR = R + phaseShift; % Apply the phase shift
