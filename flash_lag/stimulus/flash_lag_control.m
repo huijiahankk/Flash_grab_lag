@@ -1,6 +1,10 @@
 
 % For flash grab illusion test.It's a concentric grating.
 % Testting the Flash grab illusion size in 4 quadrant
+% phaseShiftMat in flash grab experiment is [148 176 184 212]
+% grating between gratingMaskRadiusPix 274 centerDiskRadiusPix 54 the
+% width of the grading is 220 pixel
+
 
 
 clear all;close all;
@@ -8,7 +12,7 @@ clear all;close all;
 if 1
     sbjname = 'hjh';
     isEyelink = 0;
-    blockNum= 2;
+    blockNum= 1;
     trialNum = 48;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -92,7 +96,8 @@ target.enddistPix = dva2pix(target.enddistDva,eyeScreenDistence,windowRect,scree
 %----------------------------------------------------------------------
 object.locPhaseShiftdva = 1;
 object.locPhaseShiftPixTemp = dva2pix(object.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
-object.loc = [target.LengthPix/2  - object.locPhaseShiftPixTemp   target.LengthPix/2  + object.locPhaseShiftPixTemp];
+% object.loc = floor([target.movDistPix/2  - object.locPhaseShiftPixTemp   target.movDistPix/2  + object.locPhaseShiftPixTemp]);
+object.locPix = [148 212];
 
 object.Image(:,:,1) = zeros(target.LengthPix,  target.WidthPix); % set object green
 object.Image(:,:,2) = ones(target.LengthPix,  target.WidthPix);
@@ -129,7 +134,7 @@ probe.intervalTime = 1;
 %        Define all possible combinations of parameters
 %----------------------------------------------------------------------
 % Create all possible combinations
-combinations = combvec(target.QuadDegree, target.MotDirec, probe.shiftPix,object.loc)';
+combinations = combvec(target.QuadDegree, target.MotDirec, probe.shiftPix,object.locPix)';
 numCombinations = size(combinations, 1);
 
 % Number of repetitions to ensure at least 40 trials for each combination
@@ -146,6 +151,26 @@ target.QuadMat = shuffledCombinations(:, 1)';
 target.MotDirecMat = shuffledCombinations(:, 2)';
 probe.shiftPixMat  = shuffledCombinations(:, 3)';
 object.locMat = shuffledCombinations(:, 4)';
+
+%----------------------------------------------------------------------
+%       load instruction image and waiting for a key press
+%----------------------------------------------------------------------
+ThisDirectory = pwd;
+InstructImFile = strcat(ThisDirectory,'/FLE.png');
+InstructIm     = imread(InstructImFile);
+InstructTex    = Screen('MakeTexture',window,InstructIm);
+sizeIm         = size(InstructIm);
+InstructSrc    = [0 0 sizeIm(2) sizeIm(1)];
+InstructDest   = [1 1 xCenter*2 yCenter*2];
+
+%draw instructions
+Screen('DrawTexture',window,InstructTex,InstructSrc,InstructDest,0); %draw fixation Gaussian
+vbl=Screen('Flip', window);%, vbl + (waitframes - 0.5) * sp.ifi);
+
+KbStrokeWait;
+
+
+
 
 %----------------------------------------------------------------------
 %      Experiment introduction
@@ -191,9 +216,9 @@ for block = 1: blockNum
              responseTrialOnsetInterval = 0.01;
         elseif     target.MotDirecMat(trial) == 0
             if object.locMat(trial) == 9
-                target.shift = 9;
+                target.shift = 40;
             elseif object.locMat(trial) == 45
-                target.shift = 45;
+                target.shift = 234;
             end
              responseTrialOnsetInterval = 0.5;
         end
@@ -234,27 +259,28 @@ for block = 1: blockNum
                 target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
                 target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX(block,trial), target.CenterPosY(block,trial) );
                 Screen('DrawTexture', window, target.Texture, [], target.Rect, target.Angle);
-                target.shiftMat(trial) = target.shift;
+                target.shiftMat(i) = target.shift;
                 iMat(trial,i) = i;
+            
 
                 %             if   i == flash.locMat(trial)
-                if i >= object.locMat(trial) + jitterAmount(block,trial) - (object.presentFrame - 1)/2 && i <= object.locMat(trial) + jitterAmount(block,trial) + (object.presentFrame - 1)/2
+                if target.shift >= object.locMat(trial) - target.speed && target.shift <= object.locMat(trial) + target.speed
 
                     object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * target.shift * sind(45);
                     object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * target.shift * cosd(45);
                     target.locWhenFlashX(block,trial) = target.CenterPosX(block,trial);
                     target.locWhenFlashY(block,trial) = target.CenterPosY(block,trial);
                     object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
-                    Screen('DrawTexture', window, target.Texture, [], object.Rect, target.Angle);
-                    objectiMat(block,trial) = i;
+                    Screen('DrawTexture', window, object.Texture, [], object.Rect, target.Angle);
+                    objectiMat(block,trial) = target.shift;
 
                 end
                 Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
                 Screen('Flip', window);
             end
 
-        elseif target.MotDirecMat(trial) == 0
-
+        elseif target.MotDirecMat(trial) == 0 
+            target.shift = object.locMat(trial);
             target.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
             target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
             target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX(block,trial), target.CenterPosY(block,trial) );

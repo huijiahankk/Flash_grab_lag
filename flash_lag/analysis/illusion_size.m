@@ -15,12 +15,12 @@ for sbjnum = 1:length(sbjnames)
     load (Files.name);
 
 
-    [upperRightInward,upperRightOutward,lowerRightInward,lowerRightOutward,lowerLeftInward,...
-        lowerLeftOutward,upperLeftInward,upperLeftOutward] = deal([]);
+    [upperRightInward,upperRightOutward,upperRightNoMotion,lowerRightInward,lowerRightOutward,lowerRightNoMotion,lowerLeftInward,...
+        lowerLeftOutward,lowerLeftNoMotion,upperLeftInward,upperLeftOutward,upperLeftNoMotion] = deal([]);
 
 
     % mov.QuadMat = shuffledCombinations(:, 1)';
-    % flash.MotDirecMat = shuffledCombinations(:, 2)';
+    % target.MotDirecMat = shuffledCombinations(:, 2)';
     % probe.CenterMat  = shuffledCombinations(:, 3)';
 
 
@@ -28,33 +28,42 @@ for sbjnum = 1:length(sbjnames)
         for trial = 1: trialNum
 
             probe.CenterDist(block,trial) = sqrt((probe.PosXMat(block,trial) - xCenter)^2 + (probe.PosYMat(block,trial)-yCenter)^2);
-            flash.CenterDist(block,trial) = sqrt((mov.locWhenFlashX(block,trial) - xCenter)^2 + (mov.locWhenFlashY(block,trial) - yCenter)^2);
+%             target.CenterDist(block,trial) = sqrt((mov.locWhenFlashX(block,trial) - xCenter)^2 + (mov.locWhenFlashY(block,trial) - yCenter)^2);
+            target.CenterDist(block,trial) = sqrt((target.locWhenFlashX(block,trial) - xCenter)^2 + (target.locWhenFlashY(block,trial)-yCenter)^2);
 
-            distancePix(block,trial) =  probe.CenterDist(block,trial) - flash.CenterDist(block,trial) ;
+            distancePix(block,trial) =  probe.CenterDist(block,trial) - target.CenterDist(block,trial) ;
 
-            if mov.QuadMat(trial) == 45
-                if mov.MotDirecMat(trial) == - 1   % -1 inward
+            if target.QuadMat(trial) == 45
+                if target.MotDirecMat(trial) == - 1   % -1 inward
                     upperRightInward = [upperRightInward,distancePix(block,trial)];
-                elseif mov.MotDirecMat(trial) == 1   % 1 outward
+                elseif target.MotDirecMat(trial) == 1   % 1 outward
                     upperRightOutward = [upperRightOutward,distancePix(block,trial)];
+                elseif target.MotDirecMat(trial) == 0
+                    upperRightNoMotion = [upperRightNoMotion,distancePix(block,trial)];
                 end
-            elseif mov.QuadMat(trial) == 135
-                if mov.MotDirecMat(trial) == - 1
+            elseif target.QuadMat(trial) == 135
+                if target.MotDirecMat(trial) == - 1
                     lowerRightInward = [lowerRightInward,distancePix(block,trial)];
-                elseif mov.MotDirecMat(trial) == 1
+                elseif target.MotDirecMat(trial) == 1
                     lowerRightOutward= [lowerRightOutward,distancePix(block,trial)];
+                elseif target.MotDirecMat(trial) == 0
+                    lowerRightNoMotion= [lowerRightNoMotion,distancePix(block,trial)];
                 end
-            elseif mov.QuadMat(trial) == 225
-                if mov.MotDirecMat(trial) == - 1
+            elseif target.QuadMat(trial) == 225
+                if target.MotDirecMat(trial) == - 1
                     lowerLeftInward = [lowerLeftInward,distancePix(block,trial)];
-                elseif mov.MotDirecMat(trial) == 1
+                elseif target.MotDirecMat(trial) == 1
                     lowerLeftOutward = [lowerLeftOutward,distancePix(block,trial)];
+                elseif target.MotDirecMat(trial) == 0
+                    lowerLeftNoMotion= [lowerLeftNoMotion,distancePix(block,trial)];
                 end
-            elseif mov.QuadMat(trial) == 315
-                if mov.MotDirecMat(trial) == - 1
+            elseif target.QuadMat(trial) == 315
+                if target.MotDirecMat(trial) == - 1
                     upperLeftInward = [upperLeftInward,distancePix(block,trial)];
-                elseif mov.MotDirecMat(trial) == 1
+                elseif target.MotDirecMat(trial) == 1
                     upperLeftOutward = [upperLeftOutward,distancePix(block,trial)];
+                elseif target.MotDirecMat(trial) == 0
+                    upperLeftNoMotion= [upperLeftNoMotion,distancePix(block,trial)];
                 end
             end
 
@@ -63,33 +72,46 @@ for sbjnum = 1:length(sbjnames)
 
     upperRightInwardMat(sbjnum,:) = - upperRightInward;
     upperRightOutwardMat(sbjnum,:) = upperRightOutward;
+    upperRightNoMotionMat(sbjnum,:) = upperRightNoMotion;
+
     lowerRightInwardMat(sbjnum,:) = - lowerRightInward;
     lowerRightOutwardMat(sbjnum,:) = lowerRightOutward;
+    lowerRightNoMotionMat(sbjnum,:) = lowerRightNoMotion;
+
     lowerLeftInwardMat(sbjnum,:) = - lowerLeftInward;
     lowerLeftOutwardMat(sbjnum,:) = lowerLeftOutward;
+    lowerLeftNoMotionMat(sbjnum,:) = lowerLeftNoMotion;
+
     upperLeftInwardMat(sbjnum,:) = - upperLeftInward;
     upperLeftOutwardMat(sbjnum,:) = upperLeftOutward;
+    upperLeftNoMotionMat(sbjnum,:) = upperLeftNoMotion;
 
 
 
     upperRightInwardMatDva(sbjnum, :) = pix2dva(upperRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     upperRightOutwardMatDva(sbjnum, :) = pix2dva(upperRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    upperRightNoMotionMatDva(sbjnum, :) = pix2dva(upperRightNoMotion(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+
     lowerRightInwardMatDva(sbjnum, :) = pix2dva(lowerRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     lowerRightOutwardMatDva(sbjnum, :) = pix2dva(lowerRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    lowerRightNoMotionMatDva(sbjnum, :) = pix2dva(lowerRightNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+
     lowerLeftInwardMatDva(sbjnum, :) = pix2dva(lowerLeftInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     lowerLeftOutwardMatDva(sbjnum, :) = pix2dva(lowerLeftOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    lowerLeftNoMotionMatDva(sbjnum, :) = pix2dva(lowerLeftNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+
     upperLeftInwardMatDva(sbjnum, :) = pix2dva(upperLeftInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     upperLeftOutwardMatDva(sbjnum, :) = pix2dva(upperLeftOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    upperLeftNoMotionMatDva(sbjnum, :) = pix2dva(upperLeftNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
 
 
 
      % save each subjects' data into excel file
-    data = table(upperRightInwardMatDva(sbjnum, :)', upperRightOutwardMatDva(sbjnum, :)', lowerRightInwardMatDva(sbjnum, :)', ...
-                 lowerRightOutwardMatDva(sbjnum, :)', lowerLeftInwardMatDva(sbjnum, :)', lowerLeftOutwardMatDva(sbjnum, :)', ...
-                 upperLeftInwardMatDva(sbjnum, :)', upperLeftOutwardMatDva(sbjnum, :)', ...
-                 'VariableNames', {'upperRightInward', 'upperRightOutward', 'lowerRightInward', 'lowerRightOutward', ...
-                                   'lowerLeftInward', 'lowerLeftOutward', 'upperLeftInward', 'upperLeftOutward'});
-
+    data = table(upperRightInwardMatDva(sbjnum, :)', upperRightOutwardMatDva(sbjnum, :)', upperRightNoMotionMatDva(sbjnum, :)', lowerRightInwardMatDva(sbjnum, :)', ...
+                 lowerRightOutwardMatDva(sbjnum, :)', lowerRightNoMotionMatDva(sbjnum, :)',lowerLeftInwardMatDva(sbjnum, :)', lowerLeftOutwardMatDva(sbjnum, :)', ...
+                 lowerLeftNoMotionMatDva(sbjnum,:)',upperLeftInwardMatDva(sbjnum, :)', upperLeftOutwardMatDva(sbjnum, :)', upperLeftNoMotionMatDva(sbjnum, :)', ...
+                 'VariableNames', {'upperRightInward', 'upperRightOutward', 'upperRightNoMotion','lowerRightInward', 'lowerRightOutward','lowerRightNoMotion' ...
+                                   'lowerLeftInward', 'lowerLeftOutward','lowerLeftNoMotion', 'upperLeftInward', 'upperLeftOutward','upperLeftNoMotion'});
 
     filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
 %     writetable(data, filename);
@@ -102,10 +124,10 @@ upper = [upperRightInwardMat upperRightOutwardMat upperLeftInwardMat upperLeftOu
 lower = [lowerRightInwardMat lowerRightOutwardMat lowerLeftInwardMat lowerLeftOutwardMat];
 Petal = [upperRightInwardMat lowerRightInwardMat lowerLeftInwardMat upperLeftInwardMat];
 Fugal = [upperRightOutwardMat lowerRightOutwardMat lowerLeftOutwardMat upperLeftOutwardMat];
-
+control = [upperRightNoMotionMat lowerRightNoMotionMat lowerLeftNoMotionMat upperLeftNoMotionMat];
 
 % Store all matrices in a cell array
-matrices = {left, right, upper, lower, Petal, Fugal};
+matrices = {left, right, upper, lower, Petal, Fugal,control};
 
 % Calculate the mean of all elements in each matrix using cellfun
 means = cellfun(@(x) mean(x, 'all'), matrices);
@@ -117,7 +139,7 @@ dvamean = pix2dva(means, eyeScreenDistence, windowRect, screenHeight);
 dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
 
 
-labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal'};
+labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control'};
 
 bar(dvamean);
 hold on;
@@ -127,7 +149,7 @@ set(gca, 'XTickLabel', labels);
 % Add titles and labels
 title('Mean of Each Condition');
 xlabel('Condition');
-ylabel('Mean distance from the flash (dva)');
+ylabel('Mean distance from the target (dva)');
 
 
 % Perform t-tests
