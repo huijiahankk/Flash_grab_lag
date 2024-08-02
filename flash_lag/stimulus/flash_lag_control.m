@@ -191,7 +191,29 @@ for block = 1: blockNum
     CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter];
     DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
     Screen('Flip', window);
-    KbStrokeWait;
+    %     KbStrokeWait;
+    % Find all keyboard devices
+    devices = PsychHID('Devices');
+    keyboardIndices = [];
+    for i = 1:length(devices)
+        if strcmp(devices(i).usageName, 'Keyboard')
+            keyboardIndices = [keyboardIndices, devices(i).index];
+        end
+    end
+
+    % Wait for any key press on any keyboard
+    keyIsDown = false;
+    while ~keyIsDown
+        for i = 1:length(keyboardIndices)
+            [keyDown, ~, keyCode] = KbCheck(keyboardIndices(i));
+            if keyDown
+                keyIsDown = true;
+                break; % Exit the loop once a key is detected
+            end
+        end
+        WaitSecs(0.01); % Short pause to avoid overwhelming the CPU
+    end
+
 
 
     %----------------------------------------------------------------------
@@ -213,14 +235,14 @@ for block = 1: blockNum
             responseTrialOnsetInterval = 0.01;
         elseif     target.MotDirecMat(trial) == - 1
             target.shift = target.enddistPix;
-             responseTrialOnsetInterval = 0.01;
+            responseTrialOnsetInterval = 0.01;
         elseif     target.MotDirecMat(trial) == 0
             if object.locMat(trial) == 9
                 target.shift = 40;
             elseif object.locMat(trial) == 45
                 target.shift = 234;
             end
-             responseTrialOnsetInterval = 0.5;
+            responseTrialOnsetInterval = 0.5;
         end
 
 
@@ -261,7 +283,7 @@ for block = 1: blockNum
                 Screen('DrawTexture', window, target.Texture, [], target.Rect, target.Angle);
                 target.shiftMat(i) = target.shift;
                 iMat(trial,i) = i;
-            
+
 
                 %             if   i == flash.locMat(trial)
                 if target.shift >= object.locMat(trial) - target.speed && target.shift <= object.locMat(trial) + target.speed
@@ -279,7 +301,7 @@ for block = 1: blockNum
                 Screen('Flip', window);
             end
 
-        elseif target.MotDirecMat(trial) == 0 
+        elseif target.MotDirecMat(trial) == 0
             target.shift = object.locMat(trial);
             target.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
             target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
@@ -359,12 +381,12 @@ for block = 1: blockNum
 
             %             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
 
-            Screen('Flip', window);   
+            Screen('Flip', window);
             % add a small pause to prevent CPU overloading
             WaitSecs(0.01);
         end
 
-        %  intervel between response and the trial onset 
+        %  intervel between response and the trial onset
         WaitSecs(responseTrialOnsetInterval);
         probe.PosXMat(block,trial) = probe.CenterPosX(block,trial)  + probe.TempX;
         probe.PosYMat(block,trial) = probe.CenterPosY(block,trial)  + probe.TempY;
