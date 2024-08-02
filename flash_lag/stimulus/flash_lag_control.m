@@ -372,11 +372,11 @@ for block = 1: blockNum
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
 
-            strResponse = 'Please adjust the probe' ;
-            Screen ('TextSize',window,30);
-            Screen('TextFont',window,'Courier');
-            DrawFormattedText(window, strResponse, 'center', 'center', grey,[],[],[],[],[],CenterQuadRect);
-
+%             strResponse = 'Please adjust the probe' ;
+%             Screen ('TextSize',window,30);
+%             Screen('TextFont',window,'Courier');
+%             DrawFormattedText(window, strResponse, 'center', 'center', grey,[],[],[],[],[],CenterQuadRect);
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,target.Angle); % flash.Rect
 
             %             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
