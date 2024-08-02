@@ -10,9 +10,9 @@
 clear all;close all;
 
 if 1
-    sbjname = 'hjh';
+    sbjname = '00';
     isEyelink = 0;
-    blockNum= 1;
+    blockNum= 6;
     trialNum = 48;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -109,7 +109,7 @@ object.presentFrame = 3; % frame
 %----------------------------------------------------------------------
 %            parameters of response probe
 %----------------------------------------------------------------------
-probe.shiftDva = [-1 1];
+probe.shiftDva = [-2 2];
 probe.shiftPix = dva2pix(probe.shiftDva,eyeScreenDistence,windowRect,screenHeight);
 
 probe.MoveStep = 1; % pixel
@@ -191,6 +191,7 @@ for block = 1: blockNum
     CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter];
     DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
     Screen('Flip', window);
+    WaitSecs(0.3); 
     %     KbStrokeWait;
     % Find all keyboard devices
     devices = PsychHID('Devices');

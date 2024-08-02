@@ -17,9 +17,9 @@
 clear all;close all;
 
 if 1
-    sbjname = '00';
+    sbjname = 'hjh_no_motion';
     isEyelink = 0;
-    blockNum= 6;
+    blockNum= 1;
     trialNum = 48; % 32 48
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -142,7 +142,7 @@ flash.Texture = Screen('MakeTexture', window, flash.Image);
 %----------------------------------------------------------------------
 %            parameters of probe line
 %----------------------------------------------------------------------
-probe.shiftDva = [-2 2];
+probe.shiftDva = [-1 1];
 probe.shiftPix = dva2pix(probe.shiftDva,eyeScreenDistence,windowRect,screenHeight);
 
 probe.MoveStep = 0.3; % pixel
