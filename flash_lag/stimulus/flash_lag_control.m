@@ -71,7 +71,7 @@ target.movDistPix = dva2pix(target.movDistDva,eyeScreenDistence,windowRect,scree
 
 % flash.Angle = 135;% The angle of rotation in degrees
 target.Size = [0, 0, target.WidthPix, target.LengthPix];  % Red bar size before rotation
-target.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
+target.QuadDegree = [45 45 45 45]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
 target.speed = 4; % pixel per frame
 % mov.PresFrame = mov.lenghPix/mov.speed; % frame
 target.MotDirec = [-1 0 1]; % - 1 means flash moves inward   1 mean flash moves outward
@@ -97,7 +97,7 @@ target.enddistPix = dva2pix(target.enddistDva,eyeScreenDistence,windowRect,scree
 object.locPhaseShiftdva = 1;
 object.locPhaseShiftPixTemp = dva2pix(object.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
 % object.loc = floor([target.movDistPix/2  - object.locPhaseShiftPixTemp   target.movDistPix/2  + object.locPhaseShiftPixTemp]);
-object.locPix = [160 236];  % 160 196 200 236  same with phaseShift = 160;  when flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
+object.locPix = [160 200];  % 160 196 200 236  same with phaseShift = 160;  when flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
 
 object.Image(:,:,1) = zeros(target.LengthPix,  target.WidthPix); % set object green
 object.Image(:,:,2) = ones(target.LengthPix,  target.WidthPix);

@@ -44,7 +44,7 @@ screenNumber = max(screens);
 grey = WhiteIndex(screenNumber) / 2;
 black = BlackIndex(screenNumber) ;
 white = WhiteIndex(screenNumber) ;
-[window, windowRect] = PsychImaging('OpenWindow', screenNumber, black, []); %
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, black, [0 0 800 600]); %
 % Get max color value for rescaling  to RGB for Host PC & Data Viewer integration
 colorMaxVal = Screen('ColorRange', window);
 [width, height] = Screen('WindowSize', window);

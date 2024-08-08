@@ -216,7 +216,7 @@ for block = 1: blockNum
     Screen('TextFont',window,'Courier');
 
     topCenterQuadRect = [xCenter/2 0  xCenter*3/2 yCenter];
-    DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
+    %drawDrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
     Screen('Flip', window);
     %     KbStrokeWait;
     WaitSecs(0.3);

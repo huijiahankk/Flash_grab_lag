@@ -1,7 +1,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'hjh'};
+sbjnames = {'003'};  %  '003','004','005','006'
 path = '../data';
 cd(path);
 
@@ -90,7 +90,7 @@ for sbjnum = 1:length(sbjnames)
 
     upperRightInwardMatDva(sbjnum, :) = pix2dva(upperRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     upperRightOutwardMatDva(sbjnum, :) = pix2dva(upperRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
-    upperRightNoMotionMatDva(sbjnum, :) = pix2dva(upperRightNoMotion(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    upperRightNoMotionMatDva(sbjnum, :) = pix2dva(upperRightNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
 
     lowerRightInwardMatDva(sbjnum, :) = pix2dva(lowerRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     lowerRightOutwardMatDva(sbjnum, :) = pix2dva(lowerRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
