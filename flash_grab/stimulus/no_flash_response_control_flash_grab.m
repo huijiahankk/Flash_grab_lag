@@ -19,7 +19,7 @@ clear all;close all;
 if 1
     sbjname = 'kk';
     isEyelink = 0;
-    blockNum= 1;
+    blockNum= 2;
     trialNum = 48; % 32 48
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -217,7 +217,7 @@ for block = 1: blockNum
     Screen('TextFont',window,'Courier');
 
     topCenterQuadRect = [xCenter/2 0  xCenter*3/2 yCenter];
-    %drawDrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
+    DrawFormattedText(window, str, 'center', 'center', grey,[],[],[],[],[],topCenterQuadRect);
     Screen('Flip', window);
     %     KbStrokeWait;
     WaitSecs(0.3);
@@ -252,14 +252,14 @@ for block = 1: blockNum
     trial = 1;
 
     while trial <=  trialNum + extraTrialNum
-        validTrialFlag = 1;   % validTrialFlag 1 valid trial     0 abandoned trial 
+        validTrialFlag = 1;   % validTrialFlag 1 valid trial     0 abandoned trial
         if trial > trialNum
             flash.QuadMat(trial) = extraConditionMat(trial - trialNum,1);
             flash.MotDirecMat(trial) = extraConditionMat(trial - trialNum,2);
             probe.shiftPixMat(trial) = extraConditionMat(trial - trialNum,3);
             flash.maxPhaseShiftMat(trial) = extraConditionMat(trial - trialNum,4);
         end
-        
+
         Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
         Screen('Flip', window);
         WaitSecs(FixationOnBeforeStiSec);
@@ -509,11 +509,15 @@ for block = 1: blockNum
         probe.PosYMat(block,trial) = probe.CenterPosY(block,trial)  + probe.TempY;
 
         % valid trial  1   % abandon trial  0
-        validTrialMat(block,trial) = validTrialFlag; 
+        validTrialMat(block,trial) = validTrialFlag;
 
-
-    trial = trial + 1;
+        trial = trial + 1;
     end
+
+extraTrialNumMat(block) = extraTrialNum;
+% extraConditionMatAll(:,:,block) = extraConditionMat;
+
+
 end
 
 %----------------------------------------------------------------------
