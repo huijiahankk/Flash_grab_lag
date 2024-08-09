@@ -19,8 +19,8 @@ clear all;close all;
 if 1
     sbjname = '00';
     isEyelink = 0;
-    blockNum= 6;
-    trialNum = 48; % 32 48
+    blockNum= 1;
+    trialNum = 10; % 32 48
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
     dlg_title = 'Set experiment parameters ';
@@ -249,7 +249,7 @@ for block = 1: blockNum
 
 
     for trial = 1:trialNum
-
+        validTrialFlag = 1;
         Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
         Screen('Flip', window);
         WaitSecs(FixationOnBeforeStiSec);
@@ -467,6 +467,9 @@ for block = 1: blockNum
                             probe.TempX = probe.TempX + probe.MoveStep;
                             probe.TempY = probe.TempY - probe.MoveStep;
                         end
+                    elseif keyCode(KbName('UpArrow'))
+                        validTrialFlag = 0;
+                        respToBeMade = false;
                     elseif keyCode(KbName('Space'))|| keyCode(KbName('Space!'))
                         respToBeMade = false;
                     end
@@ -493,6 +496,7 @@ for block = 1: blockNum
         end
         probe.PosXMat(block,trial) = probe.CenterPosX(block,trial)  + probe.TempX;
         probe.PosYMat(block,trial) = probe.CenterPosY(block,trial)  + probe.TempY;
+         validTrialFlagMat(block,trial) = validTrialFlag;
     end
 end
 
