@@ -20,7 +20,7 @@ clear all;close all;
 if 1
     sbjname = 'kk';
     isEyelink = 0;
-    blockNum= 1;
+    blockNum= 6;
     trialNum = 48; % 32 48
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -248,9 +248,9 @@ for block = 1: blockNum
     %                 Experiment loop
     %----------------------------------------------------------------------
 
-
+   
     for trial = 1:trialNum
-
+        validTrialFlag = 1;
         Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
         Screen('Flip', window);
         WaitSecs(FixationOnBeforeStiSec);
@@ -470,6 +470,9 @@ for block = 1: blockNum
                             probe.TempX = probe.TempX + probe.MoveStep;
                             probe.TempY = probe.TempY - probe.MoveStep;
                         end
+                    elseif keyCode(KbName('UpArrow'))
+                        validTrialFlag = 0;
+                        respToBeMade = false;
                     elseif keyCode(KbName('Space'))|| keyCode(KbName('Space!'))
                         respToBeMade = false;
                     end
@@ -497,7 +500,9 @@ for block = 1: blockNum
         end
         probe.PosXMat(block,trial) = probe.CenterPosX  + probe.TempX;
         probe.PosYMat(block,trial) = probe.CenterPosY  + probe.TempY;
-    end
+        validTrialFlagMat(block,trial) = validTrialFlag;
+    end 
+
 end
 
 %----------------------------------------------------------------------

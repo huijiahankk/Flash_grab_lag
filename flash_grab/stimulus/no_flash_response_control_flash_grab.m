@@ -243,11 +243,17 @@ for block = 1: blockNum
         WaitSecs(0.01); % Short pause to avoid overwhelming the CPU
     end
 
+%     % Assign the combinations to the parameters for the current block
+%     flash.QuadMat = shuffledCombinations(:, 1)';
+%     flash.MotDirecMat = shuffledCombinations(:, 2)';
+%     probe.shiftPixMat  = shuffledCombinations(:, 3)';
+%     flash.maxPhaseShiftMat = shuffledCombinations(:, 4)';
+
 
     %----------------------------------------------------------------------
     %                 Experiment loop
     %----------------------------------------------------------------------
-    extraTrialNum = 0;
+    extraTrialNum(block) = 0;
     extraConditionMat = [];
     trial = 1;
 

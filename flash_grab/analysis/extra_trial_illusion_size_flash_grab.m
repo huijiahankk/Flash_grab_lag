@@ -1,7 +1,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'kk'}; % '003','004','005','006'
+sbjnames = {'013'}; % '003','004','005','006'
 path = '../data';
 cd(path);
 
