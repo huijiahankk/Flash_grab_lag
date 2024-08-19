@@ -1,7 +1,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'003','004','005','006'}; % '003','004','005','006'
+sbjnames = {'kk'}; % '003','004','005','006'
 path = '../data';
 cd(path);
 
@@ -16,7 +16,7 @@ for sbjnum = 1:length(sbjnames)
 
 
     [upperRightInward,upperRightOutward,upperRightNoMotion,lowerRightInward,lowerRightOutward,lowerRightNoMotion,lowerLeftInward,...
-        lowerLeftOutward,lowerLeftNoMotion,upperLeftInward,upperLeftOutward,upperLeftNoMotion] = deal([]);
+        lowerLeftOutward,lowerLeftNoMotion,upperLeftInward,upperLeftOutward,upperLeftNoMotion,nearFixInward,farFixInward,nearFixOutward,farFixOutward] = deal([]);
 
 
     % flash.QuadMat = shuffledCombinations(:, 1)';
@@ -66,24 +66,43 @@ for sbjnum = 1:length(sbjnames)
                 end
             end
 
+            if flash.MotDirecMat(trial) == - 1   % illusion inward
+                if flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
+                    nearFixInward = [nearFixInward,distancePix(block,trial)];
+                elseif flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(2)
+                    farFixInward = [farFixInward,distancePix(block,trial)];
+                end
+            elseif flash.MotDirecMat(trial) ==  1  % illusion outward
+                if flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
+                    nearFixOutward = [nearFixOutward,distancePix(block,trial)];
+                elseif flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(2)
+                    farFixOutward = [farFixOutward,distancePix(block,trial)];
+                end
+            end
+
         end
     end
 
-    upperRightInwardMat(sbjnum,:) = - upperRightInward;
+    upperRightInwardMat(sbjnum,:) = upperRightInward;
     upperRightOutwardMat(sbjnum,:) = upperRightOutward;
     upperRightNoMotionMat(sbjnum,:) = upperRightNoMotion;
 
-    lowerRightInwardMat(sbjnum,:) = - lowerRightInward;
+    lowerRightInwardMat(sbjnum,:) = lowerRightInward;
     lowerRightOutwardMat(sbjnum,:) = lowerRightOutward;
     lowerRightNoMotionMat(sbjnum,:) = lowerRightNoMotion;
 
-    lowerLeftInwardMat(sbjnum,:) = - lowerLeftInward;
+    lowerLeftInwardMat(sbjnum,:) = lowerLeftInward;
     lowerLeftOutwardMat(sbjnum,:) = lowerLeftOutward;
     lowerLeftNoMotionMat(sbjnum,:) = lowerLeftNoMotion;
 
-    upperLeftInwardMat(sbjnum,:) = - upperLeftInward;
+    upperLeftInwardMat(sbjnum,:) = upperLeftInward;
     upperLeftOutwardMat(sbjnum,:) = upperLeftOutward;
     upperLeftNoMotionMat(sbjnum,:) = upperLeftNoMotion;
+
+    nearFixInwardMat(sbjnum,:) = nearFixInward;
+    farFixInwardMat(sbjnum,:)  = farFixInward;
+    nearFixOutwardMat(sbjnum,:) = nearFixOutward;
+    farFixOutwardMat(sbjnum,:) = farFixOutward;
 
 
 
@@ -102,6 +121,11 @@ for sbjnum = 1:length(sbjnames)
     upperLeftInwardMatDva(sbjnum, :) = pix2dva(upperLeftInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     upperLeftOutwardMatDva(sbjnum, :) = pix2dva(upperLeftOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     upperLeftNoMotionMatDva(sbjnum, :) = pix2dva(upperLeftNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+
+    nearFixInwardMatDva(sbjnum,:) = pix2dva(nearFixInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    farFixInwardMatDva(sbjnum,:)  = pix2dva(farFixInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    nearFixOutwardMatDva(sbjnum,:) = pix2dva(nearFixOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    farFixOutwardMatDva(sbjnum,:) = pix2dva(farFixOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
 
 
 
@@ -125,9 +149,16 @@ lower = [lowerRightInwardMat lowerRightOutwardMat lowerLeftInwardMat lowerLeftOu
 Petal = [upperRightInwardMat lowerRightInwardMat lowerLeftInwardMat upperLeftInwardMat];
 Fugal = [upperRightOutwardMat lowerRightOutwardMat lowerLeftOutwardMat upperLeftOutwardMat];
 control = [upperRightNoMotionMat lowerRightNoMotionMat lowerLeftNoMotionMat upperLeftNoMotionMat];
+nearIn = nearFixInwardMatDva;
+farIn = farFixInwardMatDva;
+nearOut = nearFixOutwardMatDva;
+farOut = farFixOutwardMatDva;
+
+
 
 % Store all matrices in a cell array
-matrices = {left, right, upper, lower, Petal, Fugal,control};
+matrices = {left, right, upper, lower, Petal, Fugal,control,nearIn,farIn,nearOut,farOut};
+
 
 % Calculate the mean of all elements in each matrix using cellfun
 means = cellfun(@(x) mean(x, 'all'), matrices);
@@ -139,13 +170,13 @@ dvamean = pix2dva(means, eyeScreenDistence, windowRect, screenHeight);
 dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
 
 
-labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control'};
+labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control','nearIn','farIn','nearOut','farOut'};
 
 bar(dvamean);
 hold on;
 errorbar(dvamean, dvase, 'k', 'LineStyle', 'none'); % 'k' for black color, 'LineStyle', 'none' to remove connecting lines
 set(gca, 'XTickLabel', labels);
-ylim([-1 6]);
+% ylim([-1 6]);
 
 % Add titles and labels
 title('Mean of Each Condition');

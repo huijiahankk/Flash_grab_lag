@@ -1,7 +1,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'013'}; % '003','004','005','006'
+sbjnames = {'6trial3block'}; % '003','004','005','006'
 path = '../data';
 cd(path);
 
@@ -22,7 +22,7 @@ for sbjnum = 1:length(sbjnames)
     % flash.QuadMat = shuffledCombinations(:, 1)';
     % flash.MotDirecMat = shuffledCombinations(:, 2)';
     % probe.CenterMat  = shuffledCombinations(:, 3)';
-%     validTrialMat
+
 
     for block = 1:blockNum
         for trial = 1: (trialNum + extraTrialNumMat(block))
@@ -37,36 +37,36 @@ for sbjnum = 1:length(sbjnames)
 
 
 
-                if flash.QuadMat(trial) == 45
-                    if flash.MotDirecMat(trial) == - 1   % -1 inward
+                if flash.QuadMatUpdate{block,1}(trial) == 45
+                    if flash.MotDirecMatUpdate{block,1}(trial) == - 1   % -1 inward
                         upperRightInward = [upperRightInward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 1   % 1 outward
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 1   % 1 outward
                         upperRightOutward = [upperRightOutward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 0
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 0
                         upperRightNoMotion = [upperRightNoMotion,distancePix(block,trial)];
                     end
-                elseif flash.QuadMat(trial) == 135
-                    if flash.MotDirecMat(trial) == - 1
+                elseif flash.QuadMatUpdate{block,1}(trial) == 135
+                    if flash.MotDirecMatUpdate{block,1}(trial) == - 1
                         lowerRightInward = [lowerRightInward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 1
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 1
                         lowerRightOutward= [lowerRightOutward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 0
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 0
                         lowerRightNoMotion= [lowerRightNoMotion,distancePix(block,trial)];
                     end
-                elseif flash.QuadMat(trial) == 225
-                    if flash.MotDirecMat(trial) == - 1
+                elseif flash.QuadMatUpdate{block,1}(trial) == 225
+                    if flash.MotDirecMatUpdate{block,1}(trial) == - 1
                         lowerLeftInward = [lowerLeftInward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 1
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 1
                         lowerLeftOutward = [lowerLeftOutward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 0
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 0
                         lowerLeftNoMotion= [lowerLeftNoMotion,distancePix(block,trial)];
                     end
-                elseif flash.QuadMat(trial) == 315
-                    if flash.MotDirecMat(trial) == - 1
+                elseif flash.QuadMatUpdate{block,1}(trial) == 315
+                    if flash.MotDirecMatUpdate{block,1}(trial) == - 1
                         upperLeftInward = [upperLeftInward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 1
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 1
                         upperLeftOutward = [upperLeftOutward,distancePix(block,trial)];
-                    elseif flash.MotDirecMat(trial) == 0
+                    elseif flash.MotDirecMatUpdate{block,1}(trial) == 0
                         upperLeftNoMotion= [upperLeftNoMotion,distancePix(block,trial)];
                     end
                 end
