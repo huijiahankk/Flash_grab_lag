@@ -1,10 +1,8 @@
 
 % For flash grab illusion test.It's a concentric grating.
 % Testting the Flash grab illusion size in 4 quadrant
-% phaseShiftMat in flash grab experiment is [148 176 184 212]
-% grating between gratingMaskRadiusPix 274 centerDiskRadiusPix 54 the
-% width of the grading is 220 pixel
-
+% phaseShiftMat in flash grab experiment is [160 200]
+% moving bar is target,  flashed bar is object
 
 
 clear all;close all;
@@ -12,7 +10,7 @@ clear all;close all;
 if 1
     sbjname = 'kk';
     isEyelink = 0;
-    blockNum= 2;
+    blockNum= 1;
     trialNum = 48;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -90,14 +88,18 @@ target.StartdistanceY = target.startdistPix * sind(85);
 target.enddistDva = 15;
 target.enddistPix = dva2pix(target.enddistDva,eyeScreenDistence,windowRect,screenHeight);
 
+target.midpointPix = (target.startdistPix + target.enddistPix)/2;
 
 %----------------------------------------------------------------------
 %        flashed red bar parameters
 %----------------------------------------------------------------------
-object.locPhaseShiftdva = 1;
+object.locPhaseShiftdva = 2;
 object.locPhaseShiftPixTemp = dva2pix(object.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
-% object.loc = floor([target.movDistPix/2  - object.locPhaseShiftPixTemp   target.movDistPix/2  + object.locPhaseShiftPixTemp]);
-object.locPix = [160 200];  % 160 196 200 236  same with phaseShift = 160;  when flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
+% have to consider FactorX * target.StartdistanceX
+object.locPix = [target.midpointPix - object.locPhaseShiftPixTemp - 0.5   target.midpointPix  + object.locPhaseShiftPixTemp + 1.5] - target.startdistPix;
+% object.locPix = [target.midpointPix -  200];  % 160 196 200 236  same with phaseShift = 160;  when flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
+
+
 
 object.Image(:,:,1) = zeros(target.LengthPix,  target.WidthPix); % set object green
 object.Image(:,:,2) = ones(target.LengthPix,  target.WidthPix);
@@ -109,10 +111,10 @@ object.presentFrame = 3; % frame
 %----------------------------------------------------------------------
 %            parameters of response probe
 %----------------------------------------------------------------------
-probe.shiftDva = [-2 2];
+probe.shiftDva = [-1 1];
 probe.shiftPix = dva2pix(probe.shiftDva,eyeScreenDistence,windowRect,screenHeight);
 
-probe.MoveStep = 1; % pixel
+probe.MoveStep = 0.7; % pixel
 probe.Tilt = 135;  % in degree
 probe.WidthDva = 0.5;
 probe.LengthDva = 3;
@@ -220,43 +222,31 @@ for block = 1: blockNum
     %----------------------------------------------------------------------
     %                 Experiment loop
     %----------------------------------------------------------------------
-    extraTrialNum = 0;
-    extraConditionMat = [];
+
     trial = 1;
 
-
-    while trial <=  trialNum + extraTrialNum
+    while trial <=  trialNum % + extraTrialNum
         validTrialFlag = 1;   % validTrialFlag 1 valid trial     0 abandoned trial
-        if trial > trialNum
-            %           addConditionMat(addTrialNum) = [flash.QuadDegree, flash.MotDirec, probe.shiftPix, flash.maxPhaseShiftPix];
-            %           flash.LocSecq
-            target.QuadMat(trial) = extraConditionMat(trial - trialNum,1);
-            target.MotDirecMat(trial) = extraConditionMat(trial - trialNum,2);
-            probe.shiftPixMat(trial) = extraConditionMat(trial - trialNum,3);
-            object.locMat(trial) = extraConditionMat(trial - trialNum,4);
-        end
 
-        %     for trial = 1:trialNum
-
-        %         fprintf('Starting trial %d of %d\n', trial, trialNum);
         prekeyIsDown = 0;
         flashShowFlag = 0;
         target.shift = 0;
+        object.flashFlag = 0;
 
-        %         target.LocSecq = target.QuadMat(trial);
-        % - 1 means flash moves inward   1 mean flash moves outward
+        % - 1 means flash moves inward  illusion direction inward
+        % 1 mean flash moves outward illusion outward
         if         target.MotDirecMat(trial) == 1
             target.shift = 0;
             responseTrialOnsetInterval = 0.01;
         elseif     target.MotDirecMat(trial) == - 1
-            target.shift = target.enddistPix;
+            target.shift = target.enddistPix - target.startdistPix;  % have to consider FactorX * target.StartdistanceX 
             responseTrialOnsetInterval = 0.01;
         elseif     target.MotDirecMat(trial) == 0
-            if object.locMat(trial) == 9
-                target.shift = 40;
-            elseif object.locMat(trial) == 45
-                target.shift = 234;
-            end
+%             if object.locMat(trial) == object.locPix(1)
+%                 target.shift = 140;   % 160  between 039 - 049
+%             elseif object.locMat(trial) == object.locPix(2)
+%                 target.shift = 220;  % 200  between 039 - 049
+%             end
             responseTrialOnsetInterval = 0.5;
         end
 
@@ -292,25 +282,24 @@ for block = 1: blockNum
                 flashShowFlag = 0;
                 flashPresentFlag = 0;
                 target.shift = target.shift + target.MotDirecMat(trial) * target.speed;
-                target.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
-                target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
-                target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX(block,trial), target.CenterPosY(block,trial) );
+                target.CenterPosX = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
+                target.CenterPosY = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
+                target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX, target.CenterPosY);
                 Screen('DrawTexture', window, target.Texture, [], target.Rect, target.Angle);
-                target.shiftMat(i) = target.shift;
+                target.shiftPerFrameMat(i) = target.shift;
                 iMat(trial,i) = i;
 
 
-                %             if   i == flash.locMat(trial)
-                if target.shift >= object.locMat(trial) - target.speed && target.shift <= object.locMat(trial) + target.speed
+                if target.shift <= object.locMat(trial) + (object.presentFrame-1)/2*target.speed && target.shift >= object.locMat(trial) - (object.presentFrame-1)/2*target.speed
 
-                    object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * target.shift * sind(45);
-                    object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * target.shift * cosd(45);
-                    target.locWhenFlashX(block,trial) = target.CenterPosX(block,trial);
-                    target.locWhenFlashY(block,trial) = target.CenterPosY(block,trial);
+                    object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * object.locMat(trial) * sind(45);
+                    object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * object.locMat(trial) * cosd(45);
+                    target.locWhenFlashX(block,trial) = target.CenterPosX;  % 
+                    target.locWhenFlashY(block,trial) = target.CenterPosY;
                     object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
                     Screen('DrawTexture', window, object.Texture, [], object.Rect, target.Angle);
-                    objectiMat(block,trial) = target.shift;
-
+                    target.lastLocMat(block,trial) = target.shift;
+                    target.locMat(block,trial)= object.locMat(trial);
                 end
                 Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
                 Screen('Flip', window);
@@ -318,18 +307,20 @@ for block = 1: blockNum
 
         elseif target.MotDirecMat(trial) == 0
             target.shift = object.locMat(trial);
-            target.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
-            target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
-            target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX(block,trial), target.CenterPosY(block,trial) );
+            target.CenterPosX = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
+            target.CenterPosY= yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
+            target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX, target.CenterPosY);
             Screen('DrawTexture', window, target.Texture, [], target.Rect, target.Angle);
 
             object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * target.shift * sind(45);
             object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * target.shift * cosd(45);
-            target.locWhenFlashX(block,trial) = target.CenterPosX(block,trial);
-            target.locWhenFlashY(block,trial) = target.CenterPosY(block,trial);
+            target.locWhenFlashX(block,trial) = target.CenterPosX;
+            target.locWhenFlashY(block,trial) = target.CenterPosY;
             object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
             Screen('DrawTexture', window, object.Texture, [], object.Rect, target.Angle);
-            objectiMat(block,trial) = i;
+            objectMat(block,trial) = i;
+            target.lastLocMat(block,trial) = target.shift;
+            target.locMat(block,trial)= object.locMat(trial);
             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
             WaitSecs(object.presentFrame/refreshRate);
@@ -379,15 +370,14 @@ for block = 1: blockNum
                         end
                     elseif keyCode(KbName('UpArrow'))
                         validTrialFlag = 0;
-                        extraTrialNum = extraTrialNum + 1;
-                        extraConditionMat(extraTrialNum,:) = [target.QuadMat(trial), target.MotDirecMat(trial), probe.shiftPixMat(trial), object.locMat(trial)];
+                        fprintf(['Miss flash block number: %d\n','trial number: %d\n'],block,trial);
                         respToBeMade = false;
                     elseif keyCode(KbName('Space'))
+                        OriginConditionMat{trial,:,block} = [target.QuadMat(trial), target.MotDirecMat(trial), probe.shiftPixMat(trial), object.locMat(trial)];
                         respToBeMade = false;
                     end
                     prekeyIsDown = keyIsDown;
                 end
-                %                 end
             end
             % draw reference line
             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
@@ -408,16 +398,20 @@ for block = 1: blockNum
 
         %  intervel between response and the trial onset
         WaitSecs(responseTrialOnsetInterval);
+
+        % recording the location of the probe at the end of the trial
         probe.PosXMat(block,trial) = probe.CenterPosX(block,trial)  + probe.TempX;
         probe.PosYMat(block,trial) = probe.CenterPosY(block,trial)  + probe.TempY;
 
         % valid trial  1   % abandon trial  0
         validTrialMat(block,trial) = validTrialFlag;
 
-        trial = trial + 1;
-
+        if validTrialFlag == 0
+            trial = trial;
+        elseif validTrialFlag == 1
+            trial = trial + 1;
+        end
     end
-    extraTrialNumMat(block) = extraTrialNum;
 end
 
 %----------------------------------------------------------------------

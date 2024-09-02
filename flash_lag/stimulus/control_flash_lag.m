@@ -10,7 +10,7 @@
 clear all;close all;
 
 if 1
-    sbjname = '00';
+    sbjname = 'kk';
     isEyelink = 0;
     blockNum= 6;
     trialNum = 48;
@@ -221,18 +221,18 @@ for block = 1: blockNum
     %                 Experiment loop
     %----------------------------------------------------------------------
 
-
-    for trial = 1:trialNum
-        validTrialFlag = 1;
-        %         fprintf('Starting trial %d of %d\n', trial, trialNum);
+   trial = 1;
+   while trial <=  trialNum %
+        validTrialFlag = 1; 
         prekeyIsDown = 0;
         flashShowFlag = 0;
         target.shift = 0;
+        object.flashFrameCount = 0;
 
         target.LocSecq = target.QuadMat(trial);
         % - 1 means flash moves inward   1 mean flash moves outward
         if         target.MotDirecMat(trial) == 1
-            target.shift = 0;
+            target.shift = target.startdistPix;
             responseTrialOnsetInterval = 0.01;
         elseif     target.MotDirecMat(trial) == - 1
             target.shift = target.enddistPix;
@@ -272,30 +272,33 @@ for block = 1: blockNum
         probe.TempX = 0;
         probe.TempY = 0;
 
+
+
         if target.MotDirecMat(trial) ~= 0
+                
+
 
             for i = 1: (target.movDistPix/target.speed)
                 flashShowFlag = 0;
                 flashPresentFlag = 0;
                 target.shift = target.shift + target.MotDirecMat(trial) * target.speed;
-                target.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceX + FactorX * target.shift * sind(45);
-                target.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceY + FactorY * target.shift * cosd(45);
+                target.CenterPosX(block,trial) = xCenter + FactorX * target.shift * sind(45);
+                target.CenterPosY(block,trial) = yCenter + FactorY * target.shift * cosd(45);
                 target.Rect = CenterRectOnPointd(target.Size, target.CenterPosX(block,trial), target.CenterPosY(block,trial) );
                 Screen('DrawTexture', window, target.Texture, [], target.Rect, target.Angle);
                 target.shiftMat(i) = target.shift;
                 iMat(trial,i) = i;
 
+                if target.shift == object.locMat(trial)  && object.flashFrameCount < object.presentFrame
 
-                %             if   i == flash.locMat(trial)
-                if target.shift >= object.locMat(trial) - target.speed && target.shift <= object.locMat(trial) + target.speed
-
-                    object.CenterPosX(block,trial) = xCenter + FactorX * target.StartdistanceY + FactorX * target.shift * sind(45);
-                    object.CenterPosY(block,trial) = yCenter + FactorY * target.StartdistanceX + FactorY * target.shift * cosd(45);
+                    object.CenterPosX(block,trial) = xCenter  + FactorX * target.shift * sind(45);
+                    object.CenterPosY(block,trial) = yCenter  + FactorY * target.shift * cosd(45);
                     target.locWhenFlashX(block,trial) = target.CenterPosX(block,trial);
                     target.locWhenFlashY(block,trial) = target.CenterPosY(block,trial);
                     object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
                     Screen('DrawTexture', window, object.Texture, [], object.Rect, target.Angle);
-                    objectiMat(block,trial) = target.shift;
+                    objectMat(block,trial) = target.shift;
+                    object.flashFrameCount = object.flashFrameCount + 1;
 
                 end
                 Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
@@ -316,6 +319,7 @@ for block = 1: blockNum
             object.Rect = CenterRectOnPointd(target.Size, object.CenterPosX(block,trial), object.CenterPosY(block,trial) );
             Screen('DrawTexture', window, object.Texture, [], object.Rect, target.Angle);
             objectiMat(block,trial) = i;
+            objectMat(block,trial) = target.shift;
             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
             Screen('Flip', window);
             WaitSecs(object.presentFrame/refreshRate);
@@ -395,6 +399,8 @@ for block = 1: blockNum
         probe.PosXMat(block,trial) = probe.CenterPosX(block,trial)  + probe.TempX;
         probe.PosYMat(block,trial) = probe.CenterPosY(block,trial)  + probe.TempY;
         validTrialFlagMat(block,trial) = validTrialFlag;
+
+        trial = trial + 1;
     end
 end
 

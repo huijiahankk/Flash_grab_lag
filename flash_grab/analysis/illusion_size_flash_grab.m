@@ -1,7 +1,7 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'kk'}; % '003','004','005','006'
+sbjnames = {'048'}; % '039','040','041','042','043','044','045','046','047','048'
 path = '../data';
 cd(path);
 
@@ -83,24 +83,24 @@ for sbjnum = 1:length(sbjnames)
         end
     end
 
-    upperRightInwardMat(sbjnum,:) = upperRightInward;
+    upperRightInwardMat(sbjnum,:) = - upperRightInward;
     upperRightOutwardMat(sbjnum,:) = upperRightOutward;
     upperRightNoMotionMat(sbjnum,:) = upperRightNoMotion;
 
-    lowerRightInwardMat(sbjnum,:) = lowerRightInward;
+    lowerRightInwardMat(sbjnum,:) = - lowerRightInward;
     lowerRightOutwardMat(sbjnum,:) = lowerRightOutward;
     lowerRightNoMotionMat(sbjnum,:) = lowerRightNoMotion;
 
-    lowerLeftInwardMat(sbjnum,:) = lowerLeftInward;
+    lowerLeftInwardMat(sbjnum,:) = - lowerLeftInward;
     lowerLeftOutwardMat(sbjnum,:) = lowerLeftOutward;
     lowerLeftNoMotionMat(sbjnum,:) = lowerLeftNoMotion;
 
-    upperLeftInwardMat(sbjnum,:) = upperLeftInward;
+    upperLeftInwardMat(sbjnum,:) = - upperLeftInward;
     upperLeftOutwardMat(sbjnum,:) = upperLeftOutward;
     upperLeftNoMotionMat(sbjnum,:) = upperLeftNoMotion;
 
-    nearFixInwardMat(sbjnum,:) = nearFixInward;
-    farFixInwardMat(sbjnum,:)  = farFixInward;
+    nearFixInwardMat(sbjnum,:) = - nearFixInward;
+    farFixInwardMat(sbjnum,:)  = - farFixInward;
     nearFixOutwardMat(sbjnum,:) = nearFixOutward;
     farFixOutwardMat(sbjnum,:) = farFixOutward;
 
@@ -142,39 +142,42 @@ for sbjnum = 1:length(sbjnames)
 
 end
 
-left = [lowerLeftInwardMat lowerLeftOutwardMat upperLeftInwardMat upperLeftOutwardMat];
-right = [upperRightInwardMat upperRightOutwardMat lowerRightInwardMat lowerRightOutwardMat];
-upper = [upperRightInwardMat upperRightOutwardMat upperLeftInwardMat upperLeftOutwardMat];
-lower = [lowerRightInwardMat lowerRightOutwardMat lowerLeftInwardMat lowerLeftOutwardMat];
-Petal = [upperRightInwardMat lowerRightInwardMat lowerLeftInwardMat upperLeftInwardMat];
-Fugal = [upperRightOutwardMat lowerRightOutwardMat lowerLeftOutwardMat upperLeftOutwardMat];
-control = [upperRightNoMotionMat lowerRightNoMotionMat lowerLeftNoMotionMat upperLeftNoMotionMat];
+left = [lowerLeftInwardMatDva lowerLeftOutwardMatDva upperLeftInwardMatDva upperLeftOutwardMatDva];
+right = [upperRightInwardMatDva upperRightOutwardMatDva lowerRightInwardMatDva lowerRightOutwardMatDva];
+upper = [upperRightInwardMatDva upperRightOutwardMatDva upperLeftInwardMatDva upperLeftOutwardMatDva];
+lower = [lowerRightInwardMatDva lowerRightOutwardMatDva lowerLeftInwardMatDva lowerLeftOutwardMatDva];
+Petal = [upperRightInwardMatDva lowerRightInwardMatDva lowerLeftInwardMatDva upperLeftInwardMatDva];
+Fugal = [upperRightOutwardMatDva lowerRightOutwardMatDva lowerLeftOutwardMatDva upperLeftOutwardMatDva];
+control = [upperRightNoMotionMatDva lowerRightNoMotionMatDva lowerLeftNoMotionMatDva upperLeftNoMotionMatDva];
 nearIn = nearFixInwardMatDva;
 farIn = farFixInwardMatDva;
 nearOut = nearFixOutwardMatDva;
 farOut = farFixOutwardMatDva;
 
 
-
 % Store all matrices in a cell array
 matrices = {left, right, upper, lower, Petal, Fugal,control,nearIn,farIn,nearOut,farOut};
 
+% each participant's average data
+% means_each = cellfun(@(x) mean(x,2), matrices);
+means_each = cellfun(@(x) mean(x,2), matrices, 'UniformOutput', false);
+% dvameans_each = pix2dva(means_each, eyeScreenDistence, windowRect, screenHeight);
 
 % Calculate the mean of all elements in each matrix using cellfun
 means = cellfun(@(x) mean(x, 'all'), matrices);
 % Calculate the standard error of the mean (SEM)
 sems = cellfun(@(x) std(x(:)) / sqrt(numel(x)), matrices);
 
-% Convert means to degrees of visual angle (dva)
-dvamean = pix2dva(means, eyeScreenDistence, windowRect, screenHeight);
-dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
+% % Convert means to degrees of visual angle (dva)
+% dvamean = pix2dva(means, eyeScreenDistence, windowRect, screenHeight);
+% dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
 
 
 labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control','nearIn','farIn','nearOut','farOut'};
 
-bar(dvamean);
+bar(means);
 hold on;
-errorbar(dvamean, dvase, 'k', 'LineStyle', 'none'); % 'k' for black color, 'LineStyle', 'none' to remove connecting lines
+errorbar(means, sems, 'k', 'LineStyle', 'none'); % 'k' for black color, 'LineStyle', 'none' to remove connecting lines
 set(gca, 'XTickLabel', labels);
 % ylim([-1 6]);
 
@@ -183,11 +186,13 @@ title('Mean of Each Condition');
 xlabel('Condition');
 ylabel('Mean distance from the flash (dva)');
 
-
+if length(sbjnames) == 1
 % Perform t-tests
 [h_lr, p_lr] = ttest2(left(:), right(:));
 [h_ul, p_ul] = ttest2(upper(:), lower(:));
 [h_pf, p_pf] = ttest2(Petal(:), Fugal(:));
+[h_nfi, p_nfi] = ttest2(nearIn(:), farIn(:));
+[h_nfo, p_nfo] = ttest2(nearOut(:), farOut(:));
 
 
 % Display results
@@ -195,3 +200,11 @@ disp('t-test results:');
 disp(['Left vs Right: h = ', num2str(h_lr), ', p = ', num2str(p_lr)]);
 disp(['Upper vs Lower: h = ', num2str(h_ul), ', p = ', num2str(p_ul)]);
 disp(['Petal vs Fugal: h = ', num2str(h_pf), ', p = ', num2str(p_pf)]);
+% disp(['nearIn vs farIn: h = ', num2str(h_nfi), ', p = ', num2str(p_nfi)]);
+% disp(['nearOut vs farOut: h = ', num2str(h_nfo), ', p = ', num2str(p_nfo)]);
+elseif length(sbjnames) >= 1
+%     ttest
+
+
+
+end
