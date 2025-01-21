@@ -1,7 +1,8 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'048'}; % '039','040','041','042','043','044','045','046','047','048'
+sbjnames = {'053','054','055','056','057','058','059','060','061','062','063','064','065','066','067','068'...
+    '069','070','071','072','073','074','075','076','077','078','079','080','081','082'}; % 'hjh','jlm','052','053','054','055'    '039','040','041','042','043','044','045','046','047','048'
 path = '../data';
 cd(path);
 
@@ -16,7 +17,7 @@ for sbjnum = 1:length(sbjnames)
 
 
     [upperRightInward,upperRightOutward,upperRightNoMotion,lowerRightInward,lowerRightOutward,lowerRightNoMotion,lowerLeftInward,...
-        lowerLeftOutward,lowerLeftNoMotion,upperLeftInward,upperLeftOutward,upperLeftNoMotion,nearFixInward,farFixInward,nearFixOutward,farFixOutward] = deal([]);
+        lowerLeftOutward,lowerLeftNoMotion,upperLeftInward,upperLeftOutward,upperLeftNoMotion,nearFixInward,farFixInward,nearFixOutward,farFixOutward,nearFixNoMotion,farFixNoMotion] = deal([]);
 
 
     % flash.QuadMat = shuffledCombinations(:, 1)';
@@ -78,6 +79,12 @@ for sbjnum = 1:length(sbjnames)
                 elseif flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(2)
                     farFixOutward = [farFixOutward,distancePix(block,trial)];
                 end
+            elseif flash.MotDirecMat(trial) ==  0  % no motion control
+                if flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(1)
+                    nearFixNoMotion = [nearFixNoMotion,distancePix(block,trial)];
+                elseif flash.maxPhaseShiftMat(trial) == flash.maxPhaseShiftPix(2)
+                    farFixNoMotion = [farFixNoMotion,distancePix(block,trial)];
+                end
             end
 
         end
@@ -104,7 +111,8 @@ for sbjnum = 1:length(sbjnames)
     nearFixOutwardMat(sbjnum,:) = nearFixOutward;
     farFixOutwardMat(sbjnum,:) = farFixOutward;
 
-
+    nearFixNoMotionMat(sbjnum,:) = nearFixNoMotion;
+    farFixNoMotionMat(sbjnum,:) = farFixNoMotion;
 
     upperRightInwardMatDva(sbjnum, :) = pix2dva(upperRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     upperRightOutwardMatDva(sbjnum, :) = pix2dva(upperRightOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
@@ -127,18 +135,25 @@ for sbjnum = 1:length(sbjnames)
     nearFixOutwardMatDva(sbjnum,:) = pix2dva(nearFixOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     farFixOutwardMatDva(sbjnum,:) = pix2dva(farFixOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
 
+    nearFixNoMotionDva(sbjnum,:) = pix2dva(nearFixNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    farFixNoMotionDva(sbjnum,:) = pix2dva(farFixNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
 
 
-     % save each subjects' data into excel file
+    % save each subjects' data into excel file
     data = table(upperRightInwardMatDva(sbjnum, :)', upperRightOutwardMatDva(sbjnum, :)', upperRightNoMotionMatDva(sbjnum, :)', lowerRightInwardMatDva(sbjnum, :)', ...
-                 lowerRightOutwardMatDva(sbjnum, :)', lowerRightNoMotionMatDva(sbjnum, :)',lowerLeftInwardMatDva(sbjnum, :)', lowerLeftOutwardMatDva(sbjnum, :)', ...
-                 lowerLeftNoMotionMatDva(sbjnum,:)',upperLeftInwardMatDva(sbjnum, :)', upperLeftOutwardMatDva(sbjnum, :)', upperLeftNoMotionMatDva(sbjnum, :)', ...
-                 'VariableNames', {'upperRightInward', 'upperRightOutward', 'upperRightNoMotion','lowerRightInward', 'lowerRightOutward','lowerRightNoMotion' ...
-                                   'lowerLeftInward', 'lowerLeftOutward','lowerLeftNoMotion', 'upperLeftInward', 'upperLeftOutward','upperLeftNoMotion'});
+        lowerRightOutwardMatDva(sbjnum, :)', lowerRightNoMotionMatDva(sbjnum, :)',lowerLeftInwardMatDva(sbjnum, :)', lowerLeftOutwardMatDva(sbjnum, :)', ...
+        lowerLeftNoMotionMatDva(sbjnum,:)',upperLeftInwardMatDva(sbjnum, :)', upperLeftOutwardMatDva(sbjnum, :)', upperLeftNoMotionMatDva(sbjnum, :)', ...
+        'VariableNames', {'upperRightInward', 'upperRightOutward', 'upperRightNoMotion','lowerRightInward', 'lowerRightOutward','lowerRightNoMotion' ...
+        'lowerLeftInward', 'lowerLeftOutward','lowerLeftNoMotion', 'upperLeftInward', 'upperLeftOutward','upperLeftNoMotion'});
+
+    data_near_far = table(nearFixInwardMatDva(sbjnum,:)',farFixInwardMatDva(sbjnum,:)',nearFixOutwardMatDva(sbjnum,:)', farFixOutwardMatDva(sbjnum,:)',...
+        nearFixNoMotionDva(sbjnum,:)',farFixNoMotionDva(sbjnum,:)','VariableNames',{'nearFixInward','farFixInward','nearFixOutward','farFixOutward','nearFixNoMotion','farFixNoMotion'});
 
 
-    filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
+%     filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
 %     writetable(data, filename);
+    filename_near_far = sprintf('data_near_far_data.xlsx');
+        writetable(data, filename_near_far);
 
 end
 
@@ -153,10 +168,15 @@ nearIn = nearFixInwardMatDva;
 farIn = farFixInwardMatDva;
 nearOut = nearFixOutwardMatDva;
 farOut = farFixOutwardMatDva;
+nearNoMotion = nearFixNoMotionDva;
+farNoMotion = farFixNoMotionDva;
 
 
 % Store all matrices in a cell array
-matrices = {left, right, upper, lower, Petal, Fugal,control,nearIn,farIn,nearOut,farOut};
+matrices = {left, right, upper, lower, Petal, Fugal,control,nearIn,farIn,nearOut,farOut,nearNoMotion,farNoMotion};
+
+% matrices = {upperLeftInwardMatDva, upperRightInwardMatDva, lowerLeftInwardMatDva, lowerRightInwardMatDva, upperLeftOutwardMatDva, upperRightOutwardMatDva,lowerLeftOutwardMatDva,lowerRightOutwardMatDva};
+
 
 % each participant's average data
 % means_each = cellfun(@(x) mean(x,2), matrices);
@@ -172,8 +192,8 @@ sems = cellfun(@(x) std(x(:)) / sqrt(numel(x)), matrices);
 % dvamean = pix2dva(means, eyeScreenDistence, windowRect, screenHeight);
 % dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
 
-
-labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control','nearIn','farIn','nearOut','farOut'};
+labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','control','nearIn','farIn','nearOut','farOut','nearNoMotion','farNoMotion'};
+% labels = {'upperleftin', 'upperrightin','lowerleftin', 'lowerrightin', 'upperleftout', 'upperrightout','lowerleftout','lowerrightout'};
 
 bar(means);
 hold on;
@@ -186,24 +206,58 @@ title('Mean of Each Condition');
 xlabel('Condition');
 ylabel('Mean distance from the flash (dva)');
 
+
+
 if length(sbjnames) == 1
-% Perform t-tests
-[h_lr, p_lr] = ttest2(left(:), right(:));
-[h_ul, p_ul] = ttest2(upper(:), lower(:));
-[h_pf, p_pf] = ttest2(Petal(:), Fugal(:));
-[h_nfi, p_nfi] = ttest2(nearIn(:), farIn(:));
-[h_nfo, p_nfo] = ttest2(nearOut(:), farOut(:));
+    % Perform t-tests
+    [h_lr, p_lr] = ttest2(left(:), right(:));
+    [h_ul, p_ul] = ttest2(upper(:), lower(:));
+    [h_pf, p_pf] = ttest2(Petal(:), Fugal(:));
+    [h_nfi, p_nfi] = ttest2(nearIn(:), farIn(:));
+    [h_nfo, p_nfo] = ttest2(nearOut(:), farOut(:));
 
 
-% Display results
-disp('t-test results:');
-disp(['Left vs Right: h = ', num2str(h_lr), ', p = ', num2str(p_lr)]);
-disp(['Upper vs Lower: h = ', num2str(h_ul), ', p = ', num2str(p_ul)]);
-disp(['Petal vs Fugal: h = ', num2str(h_pf), ', p = ', num2str(p_pf)]);
-% disp(['nearIn vs farIn: h = ', num2str(h_nfi), ', p = ', num2str(p_nfi)]);
-% disp(['nearOut vs farOut: h = ', num2str(h_nfo), ', p = ', num2str(p_nfo)]);
-elseif length(sbjnames) >= 1
-%     ttest
+    % Display results
+    disp('t-test results:');
+    disp(['Left vs Right: h = ', num2str(h_lr), ', p = ', num2str(p_lr)]);
+    disp(['Upper vs Lower: h = ', num2str(h_ul), ', p = ', num2str(p_ul)]);
+    disp(['Petal vs Fugal: h = ', num2str(h_pf), ', p = ', num2str(p_pf)]);
+    disp(['nearIn vs farIn: h = ', num2str(h_nfi), ', p = ', num2str(p_nfi)]);
+    disp(['nearOut vs farOut: h = ', num2str(h_nfo), ', p = ', num2str(p_nfo)]);
+% elseif length(sbjnames) >= 1
+% 
+%     % Combine the data correctly into a 10x11 matrix (rows: participants, columns: conditions)
+%     dataMatrix = cell2mat(means_each);  % No transpose needed here
+% 
+%     % Create a table with the data
+%     participantIDs = (1:length(sbjnames))';  % Participant IDs, 10x1 vector
+%     t = array2table(dataMatrix, 'VariableNames', {'left', 'right', 'upper', 'lower', 'Petal', 'Fugal', 'Control', 'nearIn', 'farIn', 'nearOut', 'farOut'});
+% 
+%     % Add participant IDs to the table
+%     t.Participant = participantIDs;
+% 
+%     % Convert Participant to a categorical variable
+%     t.Participant = categorical(t.Participant);
+% 
+%     % Define the within-subject factor as a categorical variable
+%     Time = categorical({'left', 'right', 'upper', 'lower', 'Petal', 'Fugal', 'Control', 'nearIn', 'farIn', 'nearOut', 'farOut'});
+% 
+%     % Define the repeated measures model
+%     rm = fitrm(t, 'left-farOut ~ 1', 'WithinDesign', Time);
+% 
+%     % Perform repeated measures ANOVA
+%     ranovatbl = ranova(rm);
+% 
+%     % Display the results
+%     disp('Repeated Measures ANOVA Results:');
+%     disp(ranovatbl);
+%     %
+%     % % Perform pairwise comparisons using multcompare
+%     % c = multcompare(rm, 'Time', 'By', 'Participant', 'ComparisonType', 'bonferroni');
+%     %
+%     % % Display the pairwise comparison results
+%     % disp('Pairwise Comparisons:');
+%     % disp(c);
 
 
 

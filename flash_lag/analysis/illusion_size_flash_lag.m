@@ -1,7 +1,9 @@
 clear all;
 addpath '../function';
 
-sbjnames = {'039'};  %  '039','040','041','042','043','044','045','046','047','048'
+sbjnames = {'053','054','055','056','057','058','059','060','061','062','063','064','065','066','067','068'...
+    '069','070','071','072','073','074','075','076','077','078','079','080','081','082'};  %  '039','040','041','042','043','044','045','046','047','048'
+
 path = '../data';
 cd(path);
 
@@ -17,7 +19,7 @@ for sbjnum = 1:length(sbjnames)
 
     [upperRightInward,upperRightOutward,upperRightNoMotion,lowerRightInward,lowerRightOutward,lowerRightNoMotion,lowerLeftInward,...
         lowerLeftOutward,lowerLeftNoMotion,upperLeftInward,upperLeftOutward,upperLeftNoMotion...
-        nearFixInward,farFixInward,nearFixOutward,farFixOutward] = deal([]);
+        nearFixInward,farFixInward,nearFixOutward,farFixOutward,nearFixNoMotion,farFixNoMotion] = deal([]);
 
 
     % mov.QuadMat = shuffledCombinations(:, 1)';
@@ -29,7 +31,8 @@ for sbjnum = 1:length(sbjnames)
         for trial = 1: trialNum
 
             probe.CenterDist(block,trial) = sqrt((probe.PosXMat(block,trial) - xCenter)^2 + (probe.PosYMat(block,trial)-yCenter)^2);
-%             target.CenterDist(block,trial) = sqrt((mov.locWhenFlashX(block,trial) - xCenter)^2 + (mov.locWhenFlashY(block,trial) - yCenter)^2);
+%            
+%              target.CenterDist(block,trial) = (object.CenterPosX(block,trial) - xCenter)^2 + (object.CenterPosY(block,trial) - yCenter)^2;
             target.CenterDist(block,trial) = sqrt((target.locWhenFlashX(block,trial) - xCenter)^2 + (target.locWhenFlashY(block,trial)-yCenter)^2);
 
             distancePix(block,trial) =  probe.CenterDist(block,trial) - target.CenterDist(block,trial) ;
@@ -80,6 +83,12 @@ for sbjnum = 1:length(sbjnames)
                 elseif object.locMat(trial) == object.locPix(2)
                     farFixOutward = [farFixOutward,distancePix(block,trial)];
                 end
+            elseif target.MotDirecMat(trial) ==  0  % no motion
+                if object.locMat(trial) == object.locPix(1)
+                    nearFixNoMotion = [nearFixNoMotion,distancePix(block,trial)];
+                elseif object.locMat(trial) == object.locPix(2)
+                    farFixNoMotion = [farFixNoMotion,distancePix(block,trial)];
+                end
             end
 
         end
@@ -106,7 +115,8 @@ for sbjnum = 1:length(sbjnames)
     nearFixOutwardMat(sbjnum,:) = nearFixOutward;
     farFixOutwardMat(sbjnum,:) = farFixOutward;
 
-
+    nearFixNoMotionMat(sbjnum,:) = nearFixNoMotion;
+    farFixNoMotionMat(sbjnum,:) = farFixNoMotion;
 
 
     upperRightInwardMatDva(sbjnum, :) = pix2dva(upperRightInwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
@@ -130,17 +140,29 @@ for sbjnum = 1:length(sbjnames)
     nearFixOutwardMatDva(sbjnum,:) = pix2dva(nearFixOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
     farFixOutwardMatDva(sbjnum,:) = pix2dva(farFixOutwardMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
 
+    nearFixNoMotionMatDva(sbjnum,:) = pix2dva(nearFixNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+    farFixNoMotionMatDva(sbjnum,:) = pix2dva(farFixNoMotionMat(sbjnum,:), eyeScreenDistence, windowRect, screenHeight);
+
+
      % save each subjects' data into excel file
     data = table(upperRightInwardMatDva(sbjnum, :)', upperRightOutwardMatDva(sbjnum, :)', upperRightNoMotionMatDva(sbjnum, :)', lowerRightInwardMatDva(sbjnum, :)', ...
                  lowerRightOutwardMatDva(sbjnum, :)', lowerRightNoMotionMatDva(sbjnum, :)',lowerLeftInwardMatDva(sbjnum, :)', lowerLeftOutwardMatDva(sbjnum, :)', ...
                  lowerLeftNoMotionMatDva(sbjnum,:)',upperLeftInwardMatDva(sbjnum, :)', upperLeftOutwardMatDva(sbjnum, :)', upperLeftNoMotionMatDva(sbjnum, :)', ...
                  'VariableNames', {'upperRightInward', 'upperRightOutward', 'upperRightNoMotion','lowerRightInward', 'lowerRightOutward','lowerRightNoMotion' ...
                                    'lowerLeftInward', 'lowerLeftOutward','lowerLeftNoMotion', 'upperLeftInward', 'upperLeftOutward','upperLeftNoMotion'});
+    data_near_far = table(nearFixInwardMatDva(sbjnum,:)',farFixInwardMatDva(sbjnum,:)',nearFixOutwardMatDva(sbjnum,:)', farFixOutwardMatDva(sbjnum,:)',...
+        nearFixNoMotionMatDva(sbjnum,:)', farFixNoMotionMatDva(sbjnum,:)', 'VariableNames',{'nearFixInward','farFixInward','nearFixOutward','farFixOutward','nearFixNoMotion','farFixNoMotion'});
 
-    filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
-%     writetable(data, filename);
 
+%     filename = sprintf('%s_data.xlsx', sbjnames{sbjnum});
+% writetable(data, filename);
+    filename_near_far = sprintf('%s_data_near_far_data.xlsx',sbjnames{sbjnum});
+    writetable(data_near_far, filename_near_far);
+    
 end
+
+
+
 
 left = [lowerLeftInwardMatDva lowerLeftOutwardMatDva upperLeftInwardMatDva upperLeftOutwardMatDva];
 right = [upperRightInwardMatDva upperRightOutwardMatDva lowerRightInwardMatDva lowerRightOutwardMatDva];
@@ -153,10 +175,13 @@ nearIn = nearFixInwardMatDva;
 farIn = farFixInwardMatDva;
 nearOut = nearFixOutwardMatDva;
 farOut = farFixOutwardMatDva;
+nearNoMotion = nearFixNoMotionMatDva;
+farNoMotion = farFixNoMotionMatDva;
 
 
 % Store all matrices in a cell array
-matrices = {left, right, upper, lower, Petal, Fugal,control,nearIn,farIn,nearOut,farOut};
+matrices = {left, right, upper, lower, Petal, Fugal,control,nearIn,farIn,nearOut,farOut,nearNoMotion,farNoMotion};
+% matrices = {nearIn,farIn,nearOut,farOut};
 
 % Calculate the mean of all elements in each matrix using cellfun
 means = cellfun(@(x) mean(x, 'all'), matrices);
@@ -168,7 +193,8 @@ sems = cellfun(@(x) std(x(:)) / sqrt(numel(x)), matrices);
 % dvase = pix2dva(sems, eyeScreenDistence, windowRect, screenHeight);
 
 
-labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control','nearIn','farIn','nearOut','farOut'};
+labels = {'left', 'right','upper', 'lower', 'Petal', 'Fugal','Control','nearIn','farIn','nearOut','farOut','nearNoMotion','farNoMotion'};
+% labels = {'nearIn','farIn','nearOut','farOut'};
 
 bar(means);
 hold on;
