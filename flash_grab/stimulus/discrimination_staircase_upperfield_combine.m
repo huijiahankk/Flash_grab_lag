@@ -18,7 +18,7 @@ clear all;close all;
 if 1
     sbjname = 'hjh';
     blockNum= 1;
-    trialNum = 16; % 32 48  have to be a multiple of 16
+    trialNum = 64; % 32 48  have to be a multiple of 16
     isEyelink = 0;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -296,20 +296,7 @@ for block = 1: blockNum
         flashLoc = trial_params(3);
 
 
-%         % Determine which staircase to use
-%         if motionDirec == -1 % Petal staircase
-%             current_staircase = 'petal';
-%             %             probe.shiftPixCurrent = staircase_petal.current;
-%         elseif motionDirec == 1 % Fugal staircase
-%             current_staircase = 'fugal';
-%             %             probe.shiftPixCurrent = staircase_fugal.current;
-%         end
 
-
-        %         % Check stopping criteria
-        %         if staircase_petal.reversals >= staircase_petal.reversal_limit && staircase_fugal.reversals >= staircase_fugal.reversal_limit
-        %             break; % Exit if both sstaircase have completed
-        %         end
         % Check stopping criteria for all sstaircase
         if all(cellfun(@(f) staircase.(f).reversals >= staircase.(f).reversal_limit, fields))
             break; % Exit if all sstaircase have completed
@@ -523,18 +510,6 @@ for block = 1: blockNum
             (current_staircase.stimuluslevel * cosd(45))^2);
 
 
-
-        %         if motionDirec == - 1
-        %             probe.CenterPosX(block,trial) = flash.CenterPosX(block,trial) - phaseshiftFactorX * staircase.petal.current * sind(45);
-        %             probe.CenterPosY(block,trial) = flash.CenterPosY(block,trial) - phaseshiftFactorY * staircase.petal.current * cosd(45);
-        %             shiftFromFlash(trial) = sqrt((staircase_petal.current * sind(45))^2 + (staircase_petal.current * cosd(45))^2);
-        %         elseif motionDirec == 1
-        %             probe.CenterPosX(block,trial) = flash.CenterPosX(block,trial) + phaseshiftFactorX * staircase.fugal.current * sind(45);
-        %             probe.CenterPosY(block,trial) = flash.CenterPosY(block,trial) + phaseshiftFactorY * staircase.fugal.current * cosd(45);
-        %             shiftFromFlash(trial) = sqrt((staircase_fugal.current * sind(45))^2 + (staircase_fugal.current * cosd(45))^2);
-        %         end
-
-
         % draw reference line
         probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
         Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,flash.Angle); % flash.Rect
@@ -668,46 +643,6 @@ for block = 1: blockNum
 end
 
 
-%----------------------------------------------------------------------
-%                 Plotting the Convergence
-%----------------------------------------------------------------------
-
-% List of staircases and their labels
-% fields = {'upper_fugal', 'upper_petal', 'lower_fugal', 'lower_petal'};
-colors = {'b', 'r', 'g', 'k'}; % Different colors for each staircase
-markers = {'-o', '-s', '-d', '-^'}; % Different markers for each staircase
-
-% Initialize figure
-figure;
-hold on;
-
-% Loop through staircases to plot progression
-for i = 1:length(fields)
-    % Access current staircase
-    current_staircase = staircase.(fields{i});
-
-    % Plot progression
-    plot(current_staircase.progression, markers{i}, 'DisplayName', [fields{i} ' Progression'], 'Color', colors{i});
-
-    % Calculate and plot the estimated threshold
-    if length(current_staircase.progression) >= 6
-        finalThreshold_guess = mean(current_staircase.progression(end-5:end)); % Last 6 trials
-    else
-        finalThreshold_guess = mean(current_staircase.progression); % Use all if less than 6
-    end
-    yline(finalThreshold_guess, '--', 'DisplayName', [fields{i} ' Threshold'], 'LineWidth', 1.5, 'Color', colors{i});
-end
-
-% Add labels and legend
-xlabel('Trial Number');
-ylabel('Stimulus Level');
-title('Staircase Progression and Thresholds');
-legend('show');
-grid on;
-set(gcf, 'Color', 'w'); % Set background color to white
-hold off;
-
-
 
 %----------------------------------------------------------------------
 %                      save parameters files
@@ -722,4 +657,47 @@ filename2 = [savePath,filename];
 save(filename2);
 
 sca;
+
+%----------------------------------------------------------------------
+%                 Plotting the Convergence
+%----------------------------------------------------------------------
+
+% List of staircases and their labels
+% fields = {'upper_fugal', 'upper_petal', 'lower_fugal', 'lower_petal'};
+fields_figure = {'upper-fugal', 'upper-petal', 'lower-fugal', 'lower-petal'};
+colors = {'b', 'r', 'g', 'k'}; % Different colors for each staircase
+markers = {'-o', '-s', '-d', '-^'}; % Different markers for each staircase
+
+% Initialize figure
+figure;
+hold on;
+
+% Loop through staircases to plot progression
+for i = 1:length(fields)
+    % Access current staircase
+    current_staircase = staircase.(fields{i});
+
+    % Plot progression
+    plot(current_staircase.progression, markers{i}, 'DisplayName', [fields_figure{i} ' Progression'], 'Color', colors{i});
+
+    % Calculate and plot the estimated threshold
+    if length(current_staircase.progression) >= 6
+        finalThreshold_guess = mean(current_staircase.progression(end-5:end)); % Last 6 trials
+    else
+        finalThreshold_guess = mean(current_staircase.progression); % Use all if less than 6
+    end
+    yline(finalThreshold_guess, '--', 'DisplayName', [fields_figure{i} ' Threshold'], 'LineWidth', 1.5, 'Color', colors{i});
+end
+
+% Add labels and legend
+xlabel('Trial Number');
+ylabel('Stimulus Level');
+title('Staircase Progression and Thresholds');
+set(gcf, 'Color', 'w'); % Set background color to white
+lgd = legend('show');
+set(lgd, 'FontSize', 15); % Adjust the font size as desired
+% Move legend outside the plot
+lgd.Location = 'northeastoutside';  % You can also use 'bestoutside', 'eastoutside', etc.
+grid on;
+hold off;
 
