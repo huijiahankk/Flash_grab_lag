@@ -194,12 +194,12 @@ end
 
 % Define shared sstaircase
 % staircase = initialize_staircase(start, step, reversals, limit, staircase direction,correctResponses, incorrectResponses)
-staircase.upper_fugal = initialize_staircase(10, 30, 0, 3, 1, 0, 0); % 45 & 315 fugal
-staircase.upper_petal = initialize_staircase(30, 30, 0, 3, 1, 0, 0); % 45 & 315 petal
-staircase.upper_control = initialize_staircase(20, 30, 0, 3, 1, 0, 0); 
-staircase.lower_fugal = initialize_staircase(10, 30, 0, 3, 1, 0, 0); % 135 & 225 fugal
-staircase.lower_petal = initialize_staircase(30, 30, 0, 3, 1, 0, 0); % 135 & 225 petal
-staircase.lower_control = initialize_staircase(20, 30, 0, 3, 1, 0, 0); 
+staircase.upper_fugal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 45 & 315 fugal
+staircase.upper_petal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 45 & 315 petal
+staircase.upper_control = initialize_staircase(0, 30, 0, 3, 1, 0, 0); 
+staircase.lower_fugal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 135 & 225 fugal
+staircase.lower_petal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 135 & 225 petal
+staircase.lower_control = initialize_staircase(0, 30, 0, 3, 1, 0, 0); 
 
 % Fieldnames of the sstaircase for easy access
 fields = fieldnames(staircase);
