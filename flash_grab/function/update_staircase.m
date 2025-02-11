@@ -15,17 +15,23 @@ if staircase.correctResponses >= consecutiveCorrectThreshold
     staircase.direction = - staircase.direction;
     % reset correct response count numbers
     staircase.correctResponses = 0;
+    % % Adaptive step sizing based on reversals
+    % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
+    staircase.step = staircase.step / 1.3;
 
 elseif staircase.incorrectResponses >= consecutiveinCorrectThreshold
     staircase.reversals = staircase.reversals + 1;
     % Switch direction
     staircase.direction = - staircase.direction;
     staircase.incorrectResponses = 0;
+    % % Adaptive step sizing based on reversals
+    % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
+    staircase.step = staircase.step / 1.3;
 end
 
-% % Adaptive step sizing based on reversals
+% % % Adaptive step sizing based on reversals
+% % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
 % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
-staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
 
 % Ensure step size does not become too small
 staircase.step = max(staircase.step, staircase.minimumStepSize);

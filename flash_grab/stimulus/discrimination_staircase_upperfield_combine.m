@@ -1,18 +1,13 @@
 
-% Use QUEST to test the threshold of probe.shiftPix
-% Testting the Flash grab illusion size in 4 quadrant * 1 flash location *
-% 2 motion direction  so totally 8 trial
+% Use adaptive step sizing to test the perceived location of the flashed bar
+% Testting the Flash grab illusion size in 4 quadrant * 1 flash location * 2 motion direction  so totally 8 condition
 % flash.QuadDegree = [45 135 225 315];
 % flash.maxPhaseShiftPix
 % flash.MotDirec = [-1 0 1];
-% probe.shiftDva = QUEST   we test 2 QUEST  threshold
-%flash.MotDirec  1 means illusion outward grating moving inward at the beginning
-%flash.MotDirec -1 mean illusion inward grating moving ourward at the beginning
-% left arrow means the probe bar is to the fovea of the flash  right arrow
-% is for the probe towards the peripheral to the flash
+% flash.MotDirec  1 means illusion outward grating moving inward at the beginning
+% flash.MotDirec -1 mean illusion inward grating moving ourward at the beginning
 % petal (inward)   fugal (outward)
-% staircase.upper_petal   staircase.upper_fugal   staircase.lower_petal    staircase.lower_fugal 
-
+% About the response:  left arrow means the probe bar is to the fovea of the flash  right arrow  is for the probe towards the peripheral to the flash
    
 
 clear all;close all;
@@ -131,7 +126,7 @@ flash.PresFrame = 3; % frame
 % flash.maxPhaseShift = 2 * cycleWidthPix; % dva2pix(maxPhaseShiftDva,eyeScreenDistence,windowRect,screenHeight);
 gratingCenterPix = (gratingMaskRadiusPix + centerDiskRadiusPix)/2;
 % locPhaseShift means flash shift from the end of the moving onset and offset
-flash.locPhaseShiftdva = 0;
+flash.locPhaseShiftdva = 2;
 flash.locPhaseShiftPixTemp = dva2pix(flash.locPhaseShiftdva,eyeScreenDistence,windowRect,screenHeight);
 % flash locations   2 locations
 % flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp - 0.5   gratingCenterPix + flash.locPhaseShiftPixTemp + 1.5];
@@ -139,7 +134,7 @@ flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp     grat
 % flash.phaseShift = 1;  % 1  (4 * cycleWidthPix - phaseShift)    2 abs(phaseShift)
 
 
-flash.MotDirec = [-1 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [-1 0 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -199,10 +194,12 @@ end
 
 % Define shared sstaircase
 % staircase = initialize_staircase(start, step, reversals, limit, staircase direction,correctResponses, incorrectResponses)
-staircase.upper_fugal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 45 & 315 fugal
-staircase.upper_petal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 45 & 315 petal
-staircase.lower_fugal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 135 & 225 fugal
-staircase.lower_petal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 135 & 225 petal
+staircase.upper_fugal = initialize_staircase(10, 30, 0, 3, 1, 0, 0); % 45 & 315 fugal
+staircase.upper_petal = initialize_staircase(30, 30, 0, 3, 1, 0, 0); % 45 & 315 petal
+staircase.upper_control = initialize_staircase(20, 30, 0, 3, 1, 0, 0); 
+staircase.lower_fugal = initialize_staircase(10, 30, 0, 3, 1, 0, 0); % 135 & 225 fugal
+staircase.lower_petal = initialize_staircase(30, 30, 0, 3, 1, 0, 0); % 135 & 225 petal
+staircase.lower_control = initialize_staircase(20, 30, 0, 3, 1, 0, 0); 
 
 % Fieldnames of the sstaircase for easy access
 fields = fieldnames(staircase);
@@ -499,14 +496,43 @@ for block = 1: blockNum
             elseif quad == 135 || quad == 225
                 current_staircase = staircase.lower_fugal; % Lower fugal
             end
+        elseif motionDirec == 0
+            if quad == 45 || quad == 315
+                current_staircase = staircase.upper_control  % upper control
+            elseif quad == 135 || quad == 225
+                current_staircase = staircase.lower_control  % lower control
+            end
         end
 
 
-        % Update probe positions using the selected staircase
-        probe.CenterPosX(block, trial) = flash.CenterPosX(block, trial) + ...
-            phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) * motionDirec; % Direction scales position shift
-        probe.CenterPosY(block, trial) = flash.CenterPosY(block, trial) + ...
-            phaseshiftFactorY * current_staircase.stimuluslevel * cosd(45) * motionDirec;
+        %         % Update probe positions using the selected staircase
+        %         probe.CenterPosX(block, trial) = flash.CenterPosX(block, trial) + ...
+        %             phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) * motionDirec; % Direction scales position shift
+        %         probe.CenterPosY(block, trial) = flash.CenterPosY(block, trial) + ...
+        %             phaseshiftFactorY * current_staircase.stimuluslevel * cosd(45) * motionDirec;
+        if motionDirec == 1 |  motionDirec == 0   % fugal  or control 
+            % Update probe positions using the selected staircase
+            probe.CenterPosX(block, trial) = flash.CenterPosX(block, trial) + ...
+                phaseshiftFactorX * current_staircase.stimuluslevel * sind(45); % Direction scales position shift
+            probe.CenterPosY(block, trial) = flash.CenterPosY(block, trial) + ...
+                phaseshiftFactorY * current_staircase.stimuluslevel * cosd(45);
+        elseif motionDirec == -1 % petal
+            probe.CenterPosX(block, trial) = flash.CenterPosX(block, trial) - ...
+                phaseshiftFactorX * current_staircase.stimuluslevel * sind(45); % Direction scales position shift
+            probe.CenterPosY(block, trial) = flash.CenterPosY(block, trial) - ...
+                phaseshiftFactorY * current_staircase.stimuluslevel * cosd(45);
+        end
+
+
+        % for helping debug the positive and negtive of the stimulus level
+        fprintf('Trial %d: stimuluslevel = %.2f, motionDirection = %d, responseCorrect = %d\n', ...
+            trial, current_staircase.stimuluslevel, motionDirec, responseCorrect);
+
+        if motionDirec == -1
+            fprintf('Motion Direction: Inward (negative)\n');
+        elseif motionDirec == 1
+            fprintf('Motion Direction: Outward (positive)\n');
+        end
 
         % Calculate the shift from the flash for logging or further use
         shiftFromFlash(trial) = sqrt((current_staircase.stimuluslevel * sind(45))^2 + ...
@@ -539,7 +565,7 @@ for block = 1: blockNum
                     elseif keyCode(KbName('LeftArrow'))  % probe is to the fovea of the first flash
                         probeToflash = 1; % 'fovea';
                         if quad == 45 ||  quad == 135   % phaseshiftFactorX is positive
-                            if current_staircase.stimuluslevel < 0 && motionDirec == -1    % phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) * motionDirec;  will be positive so the probe is to the peripheral
+                            if current_staircase.stimuluslevel < 0 && motionDirec == -1    % phaseshiftFactorX * current_staircase.stimuluslevel * sind(45);  will be positive so the probe is to the peripheral
                                 responseCorrect = 0;
                             elseif current_staircase.stimuluslevel < 0 && motionDirec == 1   % flash location  +   negtive  means close to the fovea
                                 responseCorrect = 1;
@@ -547,15 +573,23 @@ for block = 1: blockNum
                                 responseCorrect = 1;
                             elseif current_staircase.stimuluslevel > 0 && motionDirec == 1  % positive
                                 responseCorrect = 0;
+                            elseif current_staircase.stimuluslevel < 0 && motionDirec == 0 % same location
+                                responseCorrect = 1;
+                            elseif current_staircase.stimuluslevel > 0 && motionDirec == 0 % same location
+                                responseCorrect = 0;
                             end
                         elseif quad == 225 || quad == 315   % phaseshiftFactorX is negtive
-                            if current_staircase.stimuluslevel < 0 && motionDirec == -1    % phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) * motionDirec;  will be negtive so the probe is to the fovea
+                            if current_staircase.stimuluslevel < 0 && motionDirec == -1    % phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) ;  will be negtive so the probe is to the fovea
                                 responseCorrect = 1;
                             elseif current_staircase.stimuluslevel < 0 && motionDirec == 1   % flash location  +   positive  means close to the prepheral
                                 responseCorrect = 0;
                             elseif current_staircase.stimuluslevel > 0 && motionDirec == -1   % negtive
                                 responseCorrect = 0;
                             elseif current_staircase.stimuluslevel > 0 && motionDirec == 1  % positive
+                                responseCorrect = 1;
+                            elseif current_staircase.stimuluslevel < 0 && motionDirec == 0 % same location
+                                responseCorrect = 0;
+                            elseif current_staircase.stimuluslevel > 0 && motionDirec == 0 % same location
                                 responseCorrect = 1;
                             end
                         end
@@ -572,6 +606,10 @@ for block = 1: blockNum
                                 responseCorrect = 0;
                             elseif current_staircase.stimuluslevel > 0 && motionDirec == 1  % positive
                                 responseCorrect = 1;
+                            elseif current_staircase.stimuluslevel < 0 && motionDirec == 0 % negtive same location
+                                responseCorrect = 0;
+                            elseif current_staircase.stimuluslevel > 0 && motionDirec == 0 % positive same location
+                                responseCorrect = 1;
                             end
                         elseif quad == 225 || quad == 315   % phaseshiftFactorX is negtive
                             if current_staircase.stimuluslevel < 0 && motionDirec == -1    % phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) * motionDirec;  will be negtive so the probe is to the fovea
@@ -581,6 +619,10 @@ for block = 1: blockNum
                             elseif current_staircase.stimuluslevel > 0 && motionDirec == -1   % negtive
                                 responseCorrect = 1;
                             elseif current_staircase.stimuluslevel > 0 && motionDirec == 1  % positive
+                                responseCorrect = 0;
+                            elseif current_staircase.stimuluslevel < 0 && motionDirec == 0 % positive same location
+                                responseCorrect = 1;
+                            elseif current_staircase.stimuluslevel > 0 && motionDirec == 0 % negtive same location
                                 responseCorrect = 0;
                             end
                         end
@@ -614,17 +656,24 @@ for block = 1: blockNum
             if motionDirec == -1 % Petal
                 staircase.upper_petal = update_staircase(staircase.upper_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
                 log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_petal, 'staircase.upper_petal');
-            else % Fugal
+            elseif motionDirec == 1 % Fugal
                 staircase.upper_fugal = update_staircase(staircase.upper_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
                 log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_fugal, 'staircase.upper_fugal');
+            elseif motionDirec == 0
+               staircase.upper_control = update_staircase(staircase.upper_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_control, 'staircase.upper_control'); 
+
             end
         elseif quad == 135 || quad == 225
             if motionDirec == -1 % Petal
                 staircase.lower_petal = update_staircase(staircase.lower_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
                 log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_petal, 'staircase.lower_petal');
-            else % Fugal
+            elseif motionDirec == 1 % Fugal
                 staircase.lower_fugal = update_staircase(staircase.lower_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
                 log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_fugal, 'staircase.lower_fugal');
+            elseif motionDirec == 0 
+                staircase.lower_control = update_staircase(staircase.lower_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_control, 'staircase.lower_control');
             end
         end
 
@@ -694,9 +743,11 @@ sca;
 
 % List of staircases and their labels
 % fields = {'upper_fugal', 'upper_petal', 'lower_fugal', 'lower_petal'};
-fields_figure = {'upper-fugal', 'upper-petal', 'lower-fugal', 'lower-petal'};
-colors = {'b', 'r', 'g', 'k'}; % Different colors for each staircase
-markers = {'-o', '-s', '-d', '-^'}; % Different markers for each staircase
+% fields_figure = {'upper-fugal', 'upper-petal', 'lower-fugal', 'lower-petal'};
+fields_figure = {'upper-fugal', 'upper-petal', 'lower-fugal', 'lower-petal', 'upper-control', 'lower-control'};
+colors = {'b', 'r', 'g', 'k', 'm', 'c'}; % Added magenta ('m') and cyan ('c')
+markers = {'-o', '-s', '-d', '-^', '-x', '-+'}; % Added '-x' and '-+'
+
 
 % Initialize figure
 figure;
