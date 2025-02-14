@@ -36,9 +36,16 @@ end
 % Ensure step size does not become too small
 staircase.step = max(staircase.step, staircase.minimumStepSize);
 
-% Update current stimulus level
-staircase.stimuluslevel = staircase.stimuluslevel + staircase.step * staircase.direction;
+% Update current stimulus level only after the first trial
+if staircase.reversals > 0
+    % Update current stimulus level
+    staircase.stimuluslevel = staircase.stimuluslevel + staircase.step * staircase.direction;
+end
 
 % Log progression
 staircase.progression(end + 1) = staircase.stimuluslevel; % Log the current stimulus level
+
+fprintf('Inside update_staircase: Before update, stimuluslevel = %.2f\n', staircase.stimuluslevel);
+
+
 end

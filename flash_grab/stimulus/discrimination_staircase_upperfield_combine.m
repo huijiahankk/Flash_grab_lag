@@ -8,14 +8,14 @@
 % flash.MotDirec -1 mean illusion inward grating moving ourward at the beginning
 % petal (inward)   fugal (outward)
 % About the response:  left arrow means the probe bar is to the fovea of the flash  right arrow  is for the probe towards the peripheral to the flash
-   
+
 
 clear all;close all;
 
 if 1
     sbjname = 'hjh';
     blockNum= 1;
-    trialNum = 64; % 32 48  have to be a multiple of 16
+    trialNum = 16; % 32 48  have to be a multiple of 16
     isEyelink = 0;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -196,17 +196,17 @@ end
 % staircase = initialize_staircase(start, step, reversals, limit, staircase direction,correctResponses, incorrectResponses)
 staircase.upper_fugal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 45 & 315 fugal
 staircase.upper_petal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 45 & 315 petal
-staircase.upper_control = initialize_staircase(0, 30, 0, 3, 1, 0, 0); 
+staircase.upper_control = initialize_staircase(0, 30, 0, 3, 1, 0, 0);
 staircase.lower_fugal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 135 & 225 fugal
 staircase.lower_petal = initialize_staircase(0, 30, 0, 3, 1, 0, 0); % 135 & 225 petal
-staircase.lower_control = initialize_staircase(0, 30, 0, 3, 1, 0, 0); 
+staircase.lower_control = initialize_staircase(0, 30, 0, 3, 1, 0, 0);
 
 % Fieldnames of the sstaircase for easy access
 fields = fieldnames(staircase);
 calculateLastReversalNum = 3; % calculate threshold count last reversal numbers
 responseCorrect = 1;
 % Define how many correct responses are needed before switching direction
-consecutiveCorrectThreshold = 2;  
+consecutiveCorrectThreshold = 2;
 consecutiveinCorrectThreshold = 2;
 
 %----------------------------------------------------------------------
@@ -278,7 +278,7 @@ for block = 1: blockNum
 
     %     while trial <= trialNum && ...
     %             (staircase_petal.reversals < staircase_petal.reversal_limit || staircase_fugal.reversals < staircase_fugal.reversal_limit)
-%    the loop stop only if all fields meet the requirement, and to continue otherwise (if any field fails the requirement)
+    %    the loop stop only if all fields meet the requirement, and to continue otherwise (if any field fails the requirement)
     while trial <= trialNum && any(cellfun(@(f) staircase.(f).reversals < staircase.(f).reversal_limit, fields))
         validTrialFlag = 1;   % validTrialFlag 1 valid trial     0 abandoned trial
         i = 1;
@@ -505,12 +505,7 @@ for block = 1: blockNum
         end
 
 
-        %         % Update probe positions using the selected staircase
-        %         probe.CenterPosX(block, trial) = flash.CenterPosX(block, trial) + ...
-        %             phaseshiftFactorX * current_staircase.stimuluslevel * sind(45) * motionDirec; % Direction scales position shift
-        %         probe.CenterPosY(block, trial) = flash.CenterPosY(block, trial) + ...
-        %             phaseshiftFactorY * current_staircase.stimuluslevel * cosd(45) * motionDirec;
-        if motionDirec == 1 |  motionDirec == 0   % fugal  or control 
+        if motionDirec == 1 |  motionDirec == 0   % fugal  or control
             % Update probe positions using the selected staircase
             probe.CenterPosX(block, trial) = flash.CenterPosX(block, trial) + ...
                 phaseshiftFactorX * current_staircase.stimuluslevel * sind(45); % Direction scales position shift
@@ -651,59 +646,62 @@ for block = 1: blockNum
 
 
 
-        % Determine which staircase to update based on quadrant and motion direction
-        if quad == 45 || quad == 315
-            if motionDirec == -1 % Petal
-                staircase.upper_petal = update_staircase(staircase.upper_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
-                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_petal, 'staircase.upper_petal');
-            elseif motionDirec == 1 % Fugal
-                staircase.upper_fugal = update_staircase(staircase.upper_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
-                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_fugal, 'staircase.upper_fugal');
-            elseif motionDirec == 0
-               staircase.upper_control = update_staircase(staircase.upper_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
-                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_control, 'staircase.upper_control'); 
 
-            end
-        elseif quad == 135 || quad == 225
-            if motionDirec == -1 % Petal
-                staircase.lower_petal = update_staircase(staircase.lower_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
-                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_petal, 'staircase.lower_petal');
-            elseif motionDirec == 1 % Fugal
-                staircase.lower_fugal = update_staircase(staircase.lower_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
-                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_fugal, 'staircase.lower_fugal');
-            elseif motionDirec == 0 
-                staircase.lower_control = update_staircase(staircase.lower_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
-                log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_control, 'staircase.lower_control');
-            end
-        end
+        %         % Refactored threshold estimation
+        %         fields = fieldnames(staircase); % Get all staircase names dynamically
+        %
+        %         for i = 1:length(fields)
+        %             % Access the current staircase
+        %             current_staircase = staircase.(fields{i});
+        %
+        %             % Ensure there are reversals
+        %             if current_staircase.reversals > 0
+        %                 % Identify levels at reversals
+        %                 reversal_levels = current_staircase.progression(find(diff(current_staircase.direction) ~= 0));
+        %
+        %                 % Calculate threshold
+        %                 if length(reversal_levels) >= 4
+        %                     current_staircase.threshold = mean(reversal_levels(end-calculateLastReversalNum:end)); % Last 4 reversals
+        %                 else
+        %                     current_staircase.threshold = mean(reversal_levels); % Use all available reversals
+        %                 end
+        %             else
+        %                 % No reversals yet
+        %                 current_staircase.threshold = NaN;
+        %             end
+        %
+        %             % Save updated staircase back
+        %             staircase.(fields{i}) = current_staircase;
+        %         end
 
 
-        % Refactored threshold estimation
-        fields = fieldnames(staircase); % Get all staircase names dynamically
+            % Determine which staircase to update based on quadrant and motion direction
+            if quad == 45 || quad == 315
+                if motionDirec == -1 % Petal
+                    staircase.upper_petal = update_staircase(staircase.upper_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                    log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_petal, 'staircase.upper_petal');
+                elseif motionDirec == 1 % Fugal
+                    staircase.upper_fugal = update_staircase(staircase.upper_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                    log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_fugal, 'staircase.upper_fugal');
+                elseif motionDirec == 0
+                    staircase.upper_control = update_staircase(staircase.upper_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                    log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.upper_control, 'staircase.upper_control');
 
-        for i = 1:length(fields)
-            % Access the current staircase
-            current_staircase = staircase.(fields{i});
-
-            % Ensure there are reversals
-            if current_staircase.reversals > 0
-                % Identify levels at reversals
-                reversal_levels = current_staircase.progression(find(diff(current_staircase.direction) ~= 0));
-
-                % Calculate threshold
-                if length(reversal_levels) >= 4
-                    current_staircase.threshold = mean(reversal_levels(end-calculateLastReversalNum:end)); % Last 4 reversals
-                else
-                    current_staircase.threshold = mean(reversal_levels); % Use all available reversals
                 end
-            else
-                % No reversals yet
-                current_staircase.threshold = NaN;
+            elseif quad == 135 || quad == 225
+                if motionDirec == -1 % Petal
+                    staircase.lower_petal = update_staircase(staircase.lower_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                    log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_petal, 'staircase.lower_petal');
+                elseif motionDirec == 1 % Fugal
+                    staircase.lower_fugal = update_staircase(staircase.lower_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                    log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_fugal, 'staircase.lower_fugal');
+                elseif motionDirec == 0
+                    staircase.lower_control = update_staircase(staircase.lower_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold);
+                    log_staircase_info(block, trial, quad, motionDirec, responseCorrect, staircase.lower_control, 'staircase.lower_control');
+                end
             end
 
-            % Save updated staircase back
-            staircase.(fields{i}) = current_staircase;
-        end
+
 
 
         correctMat(block,trial) = responseCorrect;
@@ -758,7 +756,7 @@ for i = 1:length(fields)
     % Access current staircase
     current_staircase = staircase.(fields{i});
 
-%     % Check if the staircase is petal (inward)
+    %     % Check if the staircase is petal (inward)
     if contains(fields{i}, 'petal')
         corrected_progression = -current_staircase.progression;
     else
@@ -771,7 +769,7 @@ for i = 1:length(fields)
 
     % Calculate and plot the estimated threshold
     if length(current_staircase.progression) >= 6
-        finalThreshold_guess = mean(current_staircase.progression(end-5:end)); % Last 6 trials
+        finalThreshold_guess = mean(current_staircase.progression(end-calculateLastReversalNum:end)); % Last 6 trials
     else
         finalThreshold_guess = mean(current_staircase.progression); % Use all if less than 6
     end
