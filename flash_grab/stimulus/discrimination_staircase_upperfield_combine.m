@@ -7,7 +7,9 @@
 % flash.MotDirec  1 means illusion outward grating moving inward at the beginning
 % flash.MotDirec -1 mean illusion inward grating moving ourward at the beginning
 % petal (inward)   fugal (outward)
-% About the response:  left arrow means the probe bar is to the fovea of the flash  right arrow  is for the probe towards the peripheral to the flash
+% About the response:  
+% left arrow means the probe bar is to the fovea of the flash  
+% right arrow  is for the probe towards the peripheral to the flash
 
 
 clear all;close all;
