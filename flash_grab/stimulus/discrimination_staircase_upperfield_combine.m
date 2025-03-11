@@ -53,7 +53,7 @@ clear all;close all;
 if 1
     sbjname = 'hjh';
     blockNum= 1;
-    trialNum = 32; % 32 48  have to be a multiple of 16
+    trialNum = 160; % 32 48  have to be a multiple of 16
     isEyelink = 0;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -156,7 +156,7 @@ flash.LengthDva = 3; % Height of the red flashed bar in visual degree angle
 flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeight);
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
-flash.QuadDegree = [135 135 135 135]; % % 10 pixels [45 45 45 45]     [45 135 225 315]  upper right quadrant is 45
+flash.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]  upper right quadrant is 45
 
 flash.PresFrame = 3; % frame
 
@@ -172,7 +172,7 @@ flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp     grat
 % flash.phaseShift = 1;  % 1  (4 * cycleWidthPix - phaseShift)    2 abs(phaseShift)
 
 
-flash.MotDirec = [0 0]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [-1 0 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -231,21 +231,22 @@ end
 %----------------------------------------------------------------------
 
 % Define shared sstaircase
-% staircase = initialize_staircase(start, step, minimumStepSize,reversalLimit, staircase direction,correctResponses, incorrectResponses)
-staircase.upper_fugal = initialize_staircase(0, 30, 5, 3, 1, 0, 0); % 45 & 315 fugal
-staircase.upper_petal = initialize_staircase(0, 30, 5, 3, 1, 0, 0); % 45 & 315 petal
-staircase.upper_control = initialize_staircase(0, 30, 5, 3, 1, 0, 0);
-staircase.lower_fugal = initialize_staircase(0, 30, 5, 3, 1, 0, 0); % 135 & 225 fugal
-staircase.lower_petal = initialize_staircase(0, 30, 5, 3, 1, 0, 0); % 135 & 225 petal
-staircase.lower_control = initialize_staircase(0, 30, 5, 3, 1, 0, 0);
+% staircase = initialize_staircase(start, step, minimumStepSize,reversalLimit, staircase direction,correctResponses, incorrectResponses,actualOffset)
+staircase.upper_fugal = initialize_staircase(1, 30, 2, 5, 1, 0, 0); % 45 & 315 fugal
+staircase.upper_petal = initialize_staircase(1, 30, 2, 5, 1, 0, 0); % 45 & 315 petal
+staircase.upper_control = initialize_staircase(1, 30, 2, 5, 1, 0, 0);
+staircase.lower_fugal = initialize_staircase(1, 30, 2, 5, 1, 0, 0); % 135 & 225 fugal
+staircase.lower_petal = initialize_staircase(1, 30, 2, 5, 1, 0, 0); % 135 & 225 petal
+staircase.lower_control = initialize_staircase(1, 30, 2, 5, 1, 0, 0);
 
 % Fieldnames of the sstaircase for easy access
 fields = fieldnames(staircase);
-calculateLastReversalNum = 3; % calculate threshold count last reversal numbers
-responseCorrect = 1;
+calculateLastReversalNum = 5; % calculate threshold count last reversal numbers
+responseCorrect = 0;
 % Define how many correct responses are needed before switching direction
-consecutiveCorrectThreshold = 2;
-consecutiveinCorrectThreshold = 2;
+consecutiveCorrectThreshold = 1;
+consecutiveinCorrectThreshold = 1;
+nonadaptiveTrialNum = 1;
 
 %----------------------------------------------------------------------
 %       load instruction image and waiting for a key press
@@ -573,10 +574,6 @@ for block = 1: blockNum
         end
 
 
-%         % for helping debug the positive and negtive of the stimulus level
-%         fprintf('Trial %d: stimuluslevel = %.2f, motionDirection = %d, responseCorrect = %d\n', ...
-%             trial, current_staircase.stimuluslevel, motionDirec, responseCorrect);
-
         if motionDirec == -1
             fprintf('Motion Direction: Inward (negative)\n');
         elseif motionDirec == 1
@@ -629,23 +626,22 @@ for block = 1: blockNum
                         probeToflash = 1;
                         validTrialFlag = 1;
                         responseLabel = 'LeftArrow';
-                        perceivedProbeRelativeToFlash = 'fovea';
-                        if strcmp(actualProbeRelativeToFlash, 'neutral')
-                            responseCorrect = 0; % No shift, so any choice is incorrect
+                        if  strcmp(actualProbeRelativeToFlash, 'fovea')
+                            responseCorrect = 1;
                         else
-                            responseCorrect = strcmp(actualProbeRelativeToFlash, 'fovea');
+                            responseCorrect = 0;
                         end
                         respToBeMade = false;
                     elseif keyCode(KbName('RightArrow'))
                         probeToflash = 2;
                         validTrialFlag = 1;
                         responseLabel = 'RightArrow';
-                        perceivedProbeRelativeToFlash = 'periphery';
-                        if strcmp(actualProbeRelativeToFlash, 'neutral')
-                            responseCorrect = 0; % No shift, so any choice is incorrect
+                        if  strcmp(actualProbeRelativeToFlash, 'periphery')
+                            responseCorrect = 1;
                         else
-                            responseCorrect = strcmp(actualProbeRelativeToFlash, 'periphery');
+                            responseCorrect = 0;
                         end
+                        actualProbeRelativeToFlash = 'periphery';
                         respToBeMade = false;
                     elseif keyCode(KbName('UpArrow'))
                         validTrialFlag = 0;
@@ -671,25 +667,31 @@ for block = 1: blockNum
         % Determine which staircase to update based on quadrant and motion direction
         if quad == 45 || quad == 315
             if motionDirec == -1 % Petal
+                staircase.upper_petal = update_staircase(trial,staircase.upper_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum);
                 log_staircase_info(block, trial, quad, motionDirec, responseLabel,responseCorrect, staircase.upper_petal, 'staircase.upper_petal');
-                staircase.upper_petal = update_staircase(staircase.upper_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset);
+                
             elseif motionDirec == 1 % Fugal
+                staircase.upper_fugal = update_staircase(trial,staircase.upper_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum);
                 log_staircase_info(block, trial, quad, motionDirec, responseLabel,responseCorrect, staircase.upper_fugal, 'staircase.upper_fugal');
-                staircase.upper_fugal = update_staircase(staircase.upper_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset);
+                
             elseif motionDirec == 0
+                staircase.upper_control = update_staircase(trial,staircase.upper_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum);
                 log_staircase_info(block, trial, quad, motionDirec, responseLabel,responseCorrect, staircase.upper_control, 'staircase.upper_control');
-                staircase.upper_control = update_staircase(staircase.upper_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset);
+                
             end
         elseif quad == 135 || quad == 225
             if motionDirec == -1 % Petal
+                staircase.lower_petal = update_staircase(trial,staircase.lower_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum);
                 log_staircase_info(block, trial, quad, motionDirec, responseLabel,responseCorrect, staircase.lower_petal, 'staircase.lower_petal');
-                staircase.lower_petal = update_staircase(staircase.lower_petal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset);
+                
             elseif motionDirec == 1 % Fugal
+                staircase.lower_fugal = update_staircase(trial,staircase.lower_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum);
                 log_staircase_info(block, trial, quad, motionDirec, responseLabel,responseCorrect, staircase.lower_fugal, 'staircase.lower_fugal');
-                staircase.lower_fugal = update_staircase(staircase.lower_fugal, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset);
+                
             elseif motionDirec == 0
+                staircase.lower_control = update_staircase(trial,staircase.lower_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum);
                 log_staircase_info(block, trial, quad, motionDirec, responseLabel,responseCorrect, staircase.lower_control, 'staircase.lower_control');
-                staircase.lower_control = update_staircase(staircase.lower_control, responseCorrect,consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset);
+                
             end
         end
 

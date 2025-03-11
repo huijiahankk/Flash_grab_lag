@@ -1,55 +1,57 @@
-function staircase = update_staircase(staircase, responseCorrect, consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset)
+function staircase = update_staircase(trial,staircase, responseCorrect, consecutiveCorrectThreshold,consecutiveinCorrectThreshold,actualOffset,nonadaptiveTrialNum)
+
 
 % Log progression
 staircase.progression(end + 1) = staircase.stimuluslevel; % Log the current stimulus level
 staircase.actualOffsets(end + 1) = actualOffset; % New field to store offsets
 
 % Track consecutive correct responses
-if responseCorrect
+if responseCorrect % && ~staircase.ignoreCorrect
     staircase.correctResponses = staircase.correctResponses + 1;
-else
+elseif ~responseCorrect
     staircase.incorrectResponses = staircase.incorrectResponses + 1;
+%     staircase.ignoreCorrect = false; % Allow listening to correct responses again
 end
 
-% minimumStepSize = 2; % Ensure step size does not become too small
 
 % Check if the threshold for correct responses is meet
 if staircase.correctResponses >= consecutiveCorrectThreshold
     staircase.reversals = staircase.reversals + 1;
+
     % Switch direction
     staircase.direction = - staircase.direction;
+    staircase.reversals = staircase.reversals + 1;
+
     % reset correct response count numbers
     staircase.correctResponses = 0;
+%     staircase.ignoreCorrect = true; % Ignore further correct responses until an incorrect response occurs
     % % Adaptive step sizing based on reversals
-    % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
-    staircase.step = staircase.step / 1.2;
+    if trial >= nonadaptiveTrialNum
+        staircase.step = staircase.step / 1.2;
+    else
+        staircase.step = staircase.step
+    end
 
 elseif staircase.incorrectResponses >= consecutiveinCorrectThreshold
-    staircase.reversals = staircase.reversals + 1;
+
     % Switch direction
     staircase.direction = - staircase.direction;
+    staircase.reversals = staircase.reversals + 1;
+
     staircase.incorrectResponses = 0;
+    staircase.ignoreCorrect = false; % Reset flag to listen to correct responses again
     % % Adaptive step sizing based on reversals
-    % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
-    staircase.step = staircase.step / 1.2;
+    if trial >= nonadaptiveTrialNum
+        staircase.step = staircase.step / 1.2;
+    else
+        staircase.step = staircase.step
+    end
+    directionReversalFlag = 0;
 end
 
-% % % Adaptive step sizing based on reversals
-% % staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
-% staircase.step = staircase.step / (1 + staircase.reversals * 0.2);
 
 % Ensure step size does not become too small
 staircase.step = max(staircase.step, staircase.minimumStepSize);
-
-% Update current stimulus level only after the first trial
-% if staircase.reversals > 0
-    % Update current stimulus level
-    staircase.stimuluslevel = staircase.stimuluslevel + staircase.step * staircase.direction;
-% end
-
-
-
-% fprintf('Inside update_staircase: Before update, stimuluslevel = %.2f\n', staircase.stimuluslevel);
-
+staircase.stimuluslevel = staircase.stimuluslevel + staircase.step * staircase.direction;
 
 end
