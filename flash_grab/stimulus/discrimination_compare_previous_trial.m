@@ -7,49 +7,53 @@
 % within a dynamic square-wave grating and uses a probe (reference) bar to
 % collect participant responses. Participants report whether the probe bar
 % appears closer to the fovea (center of vision) or the periphery compared to
-% the flashed bar using left/right arrow keys. The code implements an adaptive
-% staircase procedure to adjust the probe’s position based on responses, testing
-% the illusion across four quadrants, two motion directions (inward/outward),
-% and a control condition (no motion).
-% Is the probe closer to the fixation than the flash? PRESS LEFT ARROW} {Is the probe closer to the periphery (edge of screen) than the flash? PRESS RIGHT ARROW
+% the flashed bar using the left/right arrow keys.
+%
+% The script implements an adaptive **1-up 1-down staircase** procedure based
+% on **response consistency** (i.e., whether the current response matches the
+% previous one), rather than accuracy. This allows measurement of the point
+% where the participant switches perception from foveal to peripheral bias.
+%
+% The staircase tracks:
+% - `stimuluslevel`: internal value used to set the probe's position relative to the flash
+% - `actualOffset`: physical distance from flash to probe, signed relative to fixation
+%     - Positive = probe more peripheral than flash
+%     - Negative = probe more foveal than flash
+%
+% The illusion is tested across:
+% - Four visual quadrants [45 135 225 315 degrees]
+% - Three motion conditions: inward (petal), outward (fugal), and static (control)
+%
+% Key Controls:
+% - Is the probe closer to the fixation than the flash? → PRESS LEFT ARROW
+% - Is the probe closer to the periphery than the flash? → PRESS RIGHT ARROW
 %
 % Key Features:
-% - Grating moves inward (petal) or outward (fugal), with a control condition.
-% - Flash location and probe position are adjustable.
-% - Responses are logged, and staircase convergence is plotted.
+% - Flexible grating and flash configuration
+% - Adaptive probe adjustment based on response trend
+% - Separate logging of physical (actualOffset) vs internal (stimuluslevel) progression
+% - Clear convergence plots of both values
 %
 % INSTRUCTIONS FOR MODIFICATION:
-% 1. To adjust the probe (reference bar) parameters:
-%    - Lines 198–204: Modify the 'staircase' initialization using the function
-%      'staircase = initialize_staircase(start, step, minimumStepSize, reversalLimit,
-%      staircaseDirection, correctResponses, incorrectResponses)'.
-%      - 'start': Initial probe distance from the flash (positive = toward periphery,
-%        negative = toward fovea).
-%      - 'step': Initial step size for probe movement (this decreases over time).
-%      - 'minimumStepSize': Minimum step size to prevent it from becoming too small.
-%      - 'reversalLimit': Number of reversals required to stop the staircase.
-%      - 'staircaseDirection': 1 for increasing, -1 for decreasing starting direction.
-%      - 'correctResponses': Number of consecutive correct responses needed to reverse.
-%      - 'incorrectResponses': Number of consecutive incorrect responses needed to reverse.
-% probeToflash = 1;  % fovea
-% probeToflash = 2;  % periphery
+% 1. To adjust staircase parameters:
+%    - Look for 'initialize_staircase' (e.g. Lines ~198)
+%      - 'start': Initial probe offset (positive value)
+%      - 'step': Step size for changes
+%      - 'minimumStepSize': Lower bound for step size
+%      - 'reversalLimit': How many reversals to end staircase
+%      - 'staircaseDirection': +1 or -1
 %
 % 2. To test specific locations or stimuli:
-%    - Line 123: 'flash.QuadDegree = [45 135 225 315]' defines the quadrants
-%      (degrees from horizontal). Change to, e.g., '[135 135 135 135]' to test
-%      only the lower-right quadrant.
-%    - Line 131: 'flash.locPhaseShiftdva = 0' sets the flash’s position relative
-%      to the grating center (0 = middle). Set to 2 for a 2-degree offset from
-%      the center.
-%    - Line 139: 'flash.MotDirec = [-1 0 1]' sets motion direction (-1 = inward,
-%      0 = control/no motion, 1 = outward). Change to '[1 1 1]' for only outward,
-%      '[0 0 0]' for control, or '[-1 -1 -1]' for inward motion.
+%    - 'flash.QuadDegree' sets quadrants [e.g. [45 135 225 315]]
+%    - 'flash.locPhaseShiftdva' sets flash offset from center
+%    - 'flash.MotDirec' sets motion direction (-1 = inward, 0 = control, 1 = outward)
 %
-% The experiment runs in blocks with randomized trials, saves data to a file,
-% and plots staircase progression. Ensure Psychtoolbox is installed and the
-% 'function' folder is in the path before running.
+% The experiment runs in blocks with randomized trials, saves data to file,
+% and generates plots showing staircase convergence of perceptual offset.
+% Ensure Psychtoolbox is installed and the 'function' folder is in the path before running.
 %
-% Current Date: March 02, 2025
+% Current Date: April 7, 2025
+
 
 clear all;close all;
 
