@@ -60,7 +60,7 @@ clear all;close all;
 if 1
     sbjname = 'hjh';
     blockNum= 1;
-    trialNum = 16; % 32 48  have to be a multiple of 16
+    trialNum = 32; % 32 48  have to be a multiple of 16
     isEyelink = 0;
 else
     prompt = {'subject''s name','isEyelink(without eyelink 0 or use eyelink 1)','block number','trial number(multiples of 10)'};
@@ -179,7 +179,7 @@ flash.maxPhaseShiftPix = [gratingCenterPix - flash.locPhaseShiftPixTemp     grat
 % flash.phaseShift = 1;  % 1  (4 * cycleWidthPix - phaseShift)    2 abs(phaseShift)
 
 
-flash.MotDirec = [-1 -1 -1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
+flash.MotDirec = [-1 0 1]; % repmat([-1 1],1,trialNum/2); % - 1 means illusion inward   1 mean illusion outward
 
 flash.Image(:,:,1) = ones(flash.LengthPix,  flash.WidthPix);
 flash.Image(:,:,2) = zeros(flash.LengthPix,  flash.WidthPix);
@@ -682,7 +682,7 @@ for block = 1: blockNum
                 elseif motionDirec == 0
                     staircase.upper_control = update_by_response_switch(staircase.upper_control, probeToflash, responseMat(block, trial - 1));
                     staircase.upper_control.actualOffsets(end+1) = actualOffset;
-                    log_staircase_info(block, trial, quad, motionDirec, responseLabel,staircase.upper_control, 'staircase.upper_control');
+                    log_staircase_info_v2(block, trial, quad, motionDirec, responseLabel,staircase.upper_control, 'staircase.upper_control');
 
                 end
             elseif quad == 135 || quad == 225
@@ -751,12 +751,12 @@ for i = 1:length(fields)
             'Color', colors{i}, 'LineWidth', 1.5);
     end
 
-    % Also plot progression (staircase internals)
-    if isfield(current, 'progression')
-        plot(current.progression, ':', ...
-            'DisplayName', [fields_figure{i} ' Progression'], ...
-            'Color', colors{i}, 'LineWidth', 1);
-    end
+%     % Also plot progression (staircase internals)
+%     if isfield(current, 'progression')
+%         plot(current.progression, ':', ...
+%             'DisplayName', [fields_figure{i} ' Progression'], ...
+%             'Color', colors{i}, 'LineWidth', 1);
+%     end
 
     % Plot threshold from actualOffsets
     if isfield(current, 'actualOffsets') && length(current.actualOffsets) >= calculateLastTrialNum
@@ -769,7 +769,7 @@ end
 
 xlabel('Trial Number');
 ylabel('Stimulus Level (pixels)');
-title('Staircase Progression and Thresholds');
+title('Staircase offset and Thresholds');
 legend('show', 'Location', 'northeastoutside');
 lgd = legend('show');
 set(lgd, 'FontSize', 15); % Adjust the font size as desired
