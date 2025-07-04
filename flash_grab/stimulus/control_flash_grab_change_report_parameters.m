@@ -12,7 +12,7 @@
 % phaseShiftMat in flash grab experiment is [148 176 184 212]
 % grating between gratingMaskRadiusPix 274 centerDiskRadiusPix 54  the
 % width of the grading is 220 pixel
-
+% -1 = closer to fovea, 1 = closer to periphery
 
 
 clear all;close all;
@@ -164,6 +164,15 @@ probe.Texture = Screen('MakeTexture', window, probe.Image);
 probe.Size = flash.Size;
 
 
+% Initialize adaptive parameters at the beginning of the script
+probe.stepSizePix = 1;          % 1 pixel adjustment step
+probe.minShiftPix = 1;          % Minimum 1 pixel from flash
+probe.currentShiftPix = 0;      % Initialize at flash position
+
+probe.ResponseMat = zeros(blockNum, trialNum);
+probe.RTMat = zeros(blockNum, trialNum);
+probe.ActualLocation = zeros(blockNum, trialNum);
+
 %----------------------------------------------------------------------
 %        Define all possible combinations of parameters
 %----------------------------------------------------------------------
@@ -186,6 +195,20 @@ flash.MotDirecMat = shuffledCombinations(:, 2)';
 probe.shiftPixMat  = shuffledCombinations(:, 3)';
 flash.maxPhaseShiftMat = shuffledCombinations(:, 4)';
 
+% %----------------------------------------------------------------------
+% %      pre-compute moving  Textures
+% %----------------------------------------------------------------------
+% 
+% dynamicGratingTex = cell(1, gratDuraFrame);
+% for i = 1:gratDuraFrame
+%     dynamicR = R; % Base matrix
+%     dynamicGrating = double(mod(dynamicR, cycleWidthPix * 2) < cycleWidthPix);
+%     dynamicGrating = (dynamicGrating * 2 - 1) * contrastFactor + grey;
+%     maskedGrating = ones(size(R)) * black;
+%     maskedGrating(R <= gratingMaskRadiusPix) = dynamicGrating(R <= gratingMaskRadiusPix);
+%     dynamicGratingTex{i} = Screen('MakeTexture', window, maskedGrating);
+% end
+
 %----------------------------------------------------------------------
 %       load instruction image and waiting for a key press
 %----------------------------------------------------------------------
@@ -200,6 +223,7 @@ InstructDest   = [1 1 xCenter*2 yCenter*2];
 %draw instructions
 Screen('DrawTexture',window,InstructTex,InstructSrc,InstructDest,0); %draw fixation Gaussian
 vbl=Screen('Flip', window);%, vbl + (waitframes - 0.5) * sp.ifi);
+
 
 KbStrokeWait;
 
@@ -248,7 +272,7 @@ for block = 1: blockNum
     %                 Experiment loop
     %----------------------------------------------------------------------
 
-   
+
     for trial = 1:trialNum
         validTrialFlag = 1;
         Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
@@ -342,7 +366,7 @@ for block = 1: blockNum
                     flash.CenterPosX = xCenter + phaseshiftFactorX * (4 * cycleWidthPix - phaseShift)  * sind(45);
                     flash.CenterPosY = yCenter + phaseshiftFactorY * (4 * cycleWidthPix - phaseShift)  * cosd(45);
 
-%                     flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial), flash.CenterPosY(block,trial) );
+                    %                     flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial), flash.CenterPosY(block,trial) );
                     flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
                     Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
                     phaseShiftMat(block,trial) = (4 * cycleWidthPix - phaseShift);
@@ -353,7 +377,7 @@ for block = 1: blockNum
                     % Draw the rotated red bar only when the direction changes to inward
                     flash.CenterPosX = xCenter + phaseshiftFactorX * abs(phaseShift)  * cosd(45);
                     flash.CenterPosY = yCenter + phaseshiftFactorY * abs(phaseShift)  * sind(45);
-%                     flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
+                    %                     flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
                     flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
                     Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
                     phaseShiftMat(block,trial) = abs(phaseShift);
@@ -406,7 +430,7 @@ for block = 1: blockNum
             % Draw the rotated red bar only when the direction changes to inward
             flash.CenterPosX = xCenter + phaseshiftFactorX * abs(phaseShift)  * sind(45);
             flash.CenterPosY = yCenter + phaseshiftFactorY * abs(phaseShift)  * cosd(45);
-%             flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
+            %             flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX(block,trial) , flash.CenterPosY(block,trial) );
             flash.Rect = CenterRectOnPointd(flash.Size, flash.CenterPosX, flash.CenterPosY);
             Screen('DrawTexture', window, flash.Texture, [], flash.Rect, flash.Angle);
             phaseShiftMat(trial) = abs(phaseShift);
@@ -437,71 +461,88 @@ for block = 1: blockNum
         % -------------------------------------------------------
         %             Draw  response picture
         % --------------------------------------------------------
+       
+        if trial == 1
+            % First trial: 1 pixel closer to fixation than flash
+            flashDistanceFromCenter = sqrt((flash.CenterPosX - xCenter)^2 + (flash.CenterPosY - yCenter)^2);
+            probe.currentShiftPix = flashDistanceFromCenter - 1; % 1 pixel closer
+
+        else
+            % Adjust probe position based on previous response
+            if probe.ResponseMat(block,trial-1) == -1 % Previous response was "closer to fovea"
+                probe.currentShiftPix = min(probe.currentShiftPix + probe.stepSizePix, gratingMaskRadiusPix);
+            elseif probe.ResponseMat(block,trial-1) == 1 % Previous response was "closer to periphery"
+                probe.currentShiftPix = max(probe.currentShiftPix - probe.stepSizePix, centerDiskRadiusPix);
+            end
+        end
+        
+        probe.ShiftPixMat(trial) = probe.currentShiftPix;
+
         probe.CenterPosX = flash.CenterPosX + phaseshiftFactorX * probe.shiftPixMat(trial) * sind(45);
         probe.CenterPosY = flash.CenterPosY + phaseshiftFactorY * probe.shiftPixMat(trial) * cosd(45);
 
-        % Find all keyboards (returns a device index for each keyboard)
-        [keyboardIndices, productNames, allInfos] = GetKeyboardIndices;
+        % Calculate distances for reference
+        flashDistanceFromCenter = sqrt((flash.CenterPosX - xCenter)^2 + (flash.CenterPosY - yCenter)^2);
+        probeDistanceFromCenter = sqrt((probe.CenterPosX - xCenter)^2 + (probe.CenterPosY - yCenter)^2);
+
+
+%         % Find all keyboards (returns a device index for each keyboard)
+%         [keyboardIndices, productNames, allInfos] = GetKeyboardIndices;
+% 
+
         % Start a loop to check for key presses
+        % Initialize response variables
         respToBeMade = true;
+        response = NaN; % -1 = closer to fovea, 1 = closer to periphery
+        rtStart = GetSecs; % Reaction time measurement
+
         while respToBeMade
-            % Check each connected keyboard
-            for i = 1:length(keyboardIndices)
-                [keyIsDown, ~, keyCode] = KbCheck(keyboardIndices(i));
-                %                 if keyIsDown && ~prekeyIsDown   % prevent the same press was treated twice
-                if keyIsDown
-                    if keyCode(KbName('ESCAPE'))
-                        ShowCursor;
-                        sca;
-                        return;
-                    elseif keyCode(KbName('LeftArrow'))
-                        if  flash.LocSecq == 135 || flash.LocSecq == 315
-                            probe.TempX = probe.TempX - probe.MoveStep;
-                            probe.TempY = probe.TempY - probe.MoveStep;
-                        else  flash.LocSecq == 45 | flash.LocSecq == 225;
-                            probe.TempX = probe.TempX - probe.MoveStep;
-                            probe.TempY = probe.TempY + probe.MoveStep;
-                        end
-                    elseif keyCode(KbName('RightArrow'))
-                        if  flash.LocSecq == 135 || flash.LocSecq == 315
-                            probe.TempX = probe.TempX + probe.MoveStep;
-                            probe.TempY = probe.TempY + probe.MoveStep;
-                        else  flash.LocSecq == 45 | flash.LocSecq == 225
-                            probe.TempX = probe.TempX + probe.MoveStep;
-                            probe.TempY = probe.TempY - probe.MoveStep;
-                        end
-                    elseif keyCode(KbName('UpArrow'))
-                        validTrialFlag = 0;
-                        respToBeMade = false;
-                    elseif keyCode(KbName('Space'))|| keyCode(KbName('Space!'))
-                        respToBeMade = false;
-                    end
-                    prekeyIsDown = keyIsDown;
-                end
-                %                 end
+            % Draw the stationary probe
+            probe.DestinationRect = CenterRectOnPoint(probe.Size, probe.CenterPosX, probe.CenterPosY);
+            Screen('DrawTexture', window, probe.Texture, [], probe.DestinationRect, flash.Angle);
+            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter, yCenter]);
+
+            if trial < 5
+                % Add instructional text
+                DrawFormattedText(window, 'Closer to center (Left) or periphery (Right)?', 'center', yCenter+100, white);
             end
-            % draw reference line
-%             probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX(block,trial) + probe.TempX, probe.CenterPosY(block,trial) + probe.TempY);
-            probe.DestinationRect = CenterRectOnPoint(probe.Size,probe.CenterPosX + probe.TempX, probe.CenterPosY + probe.TempY);
-            Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,flash.Angle); % flash.Rect
-            %             Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
-            %             strResponse = 'Please adjust the probe' ;
-            %             Screen ('TextSize',window,30);
-            %             Screen('TextFont',window,'Courier');
-            %             CenterQuadRect = [xCenter/2 yCenter  xCenter*3/2 yCenter];
-            %             DrawFormattedText(window, strResponse, 'center', 'center', grey,[],[],[],[],[],CenterQuadRect);
-
-            Screen('DrawTexture',window,probe.Texture,[],probe.DestinationRect,target.Angle); % flash.Rect
-            Screen('DrawLines', window, allCoords, LineWithPix, white, [xCenter,yCenter]);
-
             Screen('Flip', window);
-            % add a small pause to prevent CPU overloading
+
+            % Check keyboard responses
+            [keyIsDown, ~, keyCode] = KbCheck(-1); % Check all keyboards
+
+            if keyIsDown
+                if keyCode(KbName('ESCAPE'))
+                    sca; return;
+                elseif keyCode(KbName('LeftArrow'))
+                    response = -1; % Perceived closer to fovea
+                    rt = GetSecs - rtStart;
+                    respToBeMade = false;
+                elseif keyCode(KbName('RightArrow'))
+                    response = 1; % Perceived closer to periphery
+                    rt = GetSecs - rtStart;
+                    respToBeMade = false;
+                elseif keyCode(KbName('UpArrow')) % Skip trial
+                    validTrialFlag = 0;
+                    response = 0;
+                    rt = NaN;
+                    respToBeMade = false;
+                end
+            end
             WaitSecs(0.01);
         end
-        probe.PosXMat(block,trial) = probe.CenterPosX  + probe.TempX;
-        probe.PosYMat(block,trial) = probe.CenterPosY  + probe.TempY;
+
+        % Store all critical trial data
+        probe.ResponseMat(block,trial) = response;
+        probe.RTMat(block,trial) = rt;
+        probe.ActualLocation(block,trial) = sign(probeDistanceFromCenter - flashDistanceFromCenter); % -1 if actually closer to fovea
         validTrialFlagMat(block,trial) = validTrialFlag;
-    end 
+
+        % For debugging/analysis:
+        fprintf('Trial %d: Flash at %.1fpx, Probe at %.1fpx. Response: %d (Actual: %d)\n',...
+            trial, flashDistanceFromCenter, probeDistanceFromCenter, response,...
+            sign(probeDistanceFromCenter - flashDistanceFromCenter));
+    end
 
 end
 
