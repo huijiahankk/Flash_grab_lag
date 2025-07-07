@@ -165,7 +165,7 @@ flash.LengthDva = 3; % Height of the red flashed bar in visual degree angle
 flash.WidthPix = dva2pix(flash.WidthDva,eyeScreenDistence,windowRect,screenHeight);
 flash.LengthPix = dva2pix(flash.LengthDva,eyeScreenDistence,windowRect,screenHeight);
 flash.Size = [0, 0, flash.WidthPix, flash.LengthPix];  % Red bar size before rotation
-flash.QuadDegree = [45 135 225 315]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
+flash.QuadDegree = [135 135 135 135]; % % 10 pixels [45 45 45 45]     [45 135 225 315]
 
 flash.PresFrame = 3; % frame
 
